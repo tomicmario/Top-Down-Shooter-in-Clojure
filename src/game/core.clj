@@ -1,10 +1,11 @@
 (ns game.core
   (:gen-class)
-  (:require [game.swing :as display]
+  (:require [game.window.swing :as display]
             [game.logic.controller :as controller]))
 
 (def logic-frame-time-ms 10)
 (def display-frame-time-ms 8)
+(def max-coordinate 500)
 
 (defn schedule-task [task interval-ms]
   (let [last-execution-time (atom (System/currentTimeMillis))]
@@ -20,10 +21,11 @@
           (Thread/sleep 1))))))
 
 (defn simulate-game []
+  (controller/init-scene 0 0 max-coordinate max-coordinate)
   (schedule-task controller/next-tick logic-frame-time-ms))
 
 (defn render-game []
-  (display/init "Projet PLM") 
+  (display/init "Game") 
   (schedule-task display/display display-frame-time-ms))
 
 (defn start-threads []

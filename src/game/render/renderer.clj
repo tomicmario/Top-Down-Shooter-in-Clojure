@@ -1,5 +1,4 @@
-(ns game.renderer
-  (:gen-class)
+(ns game.render.renderer
   (:import [java.awt.image BufferedImage])
   (:import [java.awt.geom Rectangle2D$Double AffineTransform])
   (:import [java.awt Color Graphics2D Graphics Font])

@@ -1,8 +1,7 @@
 (ns game.logic.controller
-  (:gen-class)
-  (:require [game.logic.projectiles :as proj]
-            [game.logic.player :as player]
-            [game.logic.enemies :as enemies]
+  (:require [game.logic.projectileHandler :as proj]
+            [game.logic.playerHandler :as player]
+            [game.logic.enemyHandler :as enemies]
             [game.state :as state]))
 
 (defn unify-data [state proj-data player-data enemy-data]
@@ -20,6 +19,11 @@
         player-data (future (player/next-tick state))
         enemy-data (future (enemies/next-tick state))]
     (unify-data state (deref proj-data) (deref player-data) (deref enemy-data))))
+
+(defn init-scene[min-x min-y max-x max-y]
+  (let [new-bounds {:min-x min-x :min-y min-y
+                    :max-x max-x :max-y max-y}]
+    (reset! state/bounds new-bounds)))
 
 ; ENTIRE FRAME LOGIC
 (defn next-tick []

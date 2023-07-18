@@ -1,18 +1,17 @@
 (ns game.state
-  (:gen-class)
-  (:require [game.entities :as e]
+  (:require [game.entity.entities :as e]
             [game.state :as state]))
 
-(def bounds {:min-x 0.0 :min-y 0.0 :max-x 500.0 :max-y 500.0})
+(def bounds (atom {:min-x 0.0 :min-y 0.0 :max-x 500.0 :max-y 500.0}))
 
 (defn default-player []
-  (let [x (/ (:max-x bounds) 2)
-        y (/ (:max-y bounds) 2)]
+  (let [x (/ (:max-x @bounds) 2)
+        y (/ (:max-y @bounds) 2)]
   (e/default-player x y)))
 
 (defn default-state []
   {:player (default-player) :p-proj [] :e-proj []
-   :enemies [] :timestamp 0 :bounds bounds :score 0})
+   :enemies [] :timestamp 0 :bounds @bounds :score 0})
 
 ; STATE VARIABLES
 (def inputs (atom #{}))
@@ -34,9 +33,9 @@
 
 (defn update-mouse [x y max-x max-y] 
   ; Requires the maximum size of display to have interpretable positions, 
-  ; that don't depend on a fixed size
-  (let [new-x (* x (/ (:max-x bounds) max-x))
-        new-y (* y (/ (:max-y bounds) max-y))]
+  ; that doesn't depend on a fixed size
+  (let [new-x (* x (/ (:max-x @bounds) max-x))
+        new-y (* y (/ (:max-y @bounds) max-y))]
   (swap! mouse assoc :x new-x)
   (swap! mouse assoc :y new-y)))
 ; END INPUTS UPDATE

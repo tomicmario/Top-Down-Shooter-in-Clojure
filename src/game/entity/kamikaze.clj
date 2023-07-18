@@ -1,0 +1,15 @@
+(ns game.entity.kamikaze
+  (:require [game.entity.common :as common])
+  (:require [game.entity.projectile :as proj]))
+
+(defn move [entity vector]
+  (common/default-move entity vector))
+
+(defn create [x y] 
+  (common/entity x y 100 20 20 0.6 :kamikaze))
+
+(defn create-projectile [entity target]
+  (let [x (:x entity)
+        y (:y entity)
+        vec (common/gen-vector entity target)]
+    (proj/create x y 1 50 0 vec (+ (:last-shot entity) 2))))
