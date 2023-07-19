@@ -17,8 +17,11 @@
 (defn generate-next-tick[state]
   (let [proj-data (future (proj/next-tick state))
         player-data (future (player/next-tick state))
-        enemy-data (future (enemies/next-tick state))]
-    (unify-data state (deref proj-data) (deref player-data) (deref enemy-data))))
+        enemy-data (future (enemies/next-tick state))
+        new-speed (if (contains? (:inputs state) :slow) 0.2 1)]
+    (-> state
+        (unify-data (deref proj-data) (deref player-data) (deref enemy-data))
+        (assoc :speed new-speed))))
 
 (defn init-scene[min-x min-y max-x max-y]
   (let [new-bounds {:min-x min-x :min-y min-y

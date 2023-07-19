@@ -39,7 +39,7 @@
 
 (defn move-enemies [state]
   (let [get-entity-vec (fn [e] (e/gen-vector e (common/get-target e state)))
-        move-enemy (fn [e] (e/move e (get-entity-vec e)))
+        move-enemy (fn [e] (e/move e (get-entity-vec e) (:speed state)))
         enemies (map move-enemy (:enemies state))]
     (assoc state :enemies enemies)))
 

@@ -5,7 +5,8 @@
   (let [proj-data (merge vector {:max-ttl max-ttl})]
     (common/entity x y damage radius radius speed :projectile proj-data)))
 
-(defn move [entity]
+(defn move [entity speed]
   (let [vec {:vec-x (:vec-x entity) :vec-y (:vec-y entity)}
-        pos (common/new-position entity vec)]
+        spd (if (nil? speed) 1 speed)
+        pos (common/new-position entity vec spd)]
     (common/apply-position entity pos)))

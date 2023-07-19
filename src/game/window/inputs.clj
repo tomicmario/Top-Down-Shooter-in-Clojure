@@ -10,7 +10,8 @@
     (when (= keycode KeyEvent/VK_S) (fn :down))
     (when (= keycode KeyEvent/VK_A) (fn :left))
     (when (= keycode KeyEvent/VK_D) (fn :right))
-    (when (= keycode KeyEvent/VK_R) (fn :reset))))
+    (when (= keycode KeyEvent/VK_R) (fn :reset))
+    (when (= keycode KeyEvent/VK_CONTROL) (fn :slow))))
 
 (def mouse-listener
   (proxy [MouseInputAdapter] []

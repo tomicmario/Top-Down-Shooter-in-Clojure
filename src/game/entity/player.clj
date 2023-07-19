@@ -2,8 +2,8 @@
   (:require [game.entity.common :as common])
   (:require [game.entity.projectile :as proj]))
 
-(defn move [entity vector]
-  (common/default-move entity vector))
+(defn move [entity vector speed]
+  (common/default-move entity vector speed))
 
 (defn default-player [x y]
   (common/entity x y 100 20 20 1 :player {:last-shot -100 :firerate 10}))

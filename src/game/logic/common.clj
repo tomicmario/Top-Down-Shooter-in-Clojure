@@ -51,7 +51,8 @@
   (let [player (:player state)
         shoot-distance 30]
     (and (closer-than-distance? entity player shoot-distance)
-         (e/is-alive? player))))
+         (e/is-alive? player)
+         (> (:timestamp state) (+ (:last-shot entity) (:firerate entity))))))
 
 (defmethod can-shoot? [:player] [entity state]
   ;(== 1 1))

@@ -38,8 +38,9 @@
     (assoc state :p-proj new-proj)))
 
 (defn move-proj [state]
-  (let [e-proj (mapv e/move (:e-proj state))
-        p-proj (mapv e/move (:p-proj state))]
+  (let [fn-move (fn [e] (e/move e (:speed state)))
+        e-proj (mapv fn-move (:e-proj state))
+        p-proj (mapv fn-move (:p-proj state))]
     (-> state
         (assoc :e-proj e-proj)
         (assoc :p-proj p-proj))))

@@ -11,7 +11,7 @@
 
 (defn default-state []
   {:player (default-player) :p-proj [] :e-proj []
-   :enemies [] :timestamp 0 :bounds @bounds :score 0})
+   :enemies [] :timestamp 0 :bounds @bounds :score 0 :speed 1})
 
 ; STATE VARIABLES
 (def inputs (atom #{}))
@@ -49,9 +49,10 @@
 
 (defn clean-state [state]
   (-> state
-      (assoc :timestamp (inc (:timestamp state)))
+      (assoc :timestamp (+ (:timestamp state) (:speed state)))
       (dissoc :inputs)
-      (dissoc :mouse)))
+      (dissoc :mouse)
+      (assoc :bounds @bounds)))
 
 (defn save-state [state] 
     (reset! entity-state (clean-state state)))

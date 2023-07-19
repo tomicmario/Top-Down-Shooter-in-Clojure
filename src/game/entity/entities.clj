@@ -45,17 +45,17 @@
 
 (defmulti move (fn [entity & []] [(:type entity)]))
 
-(defmethod move [:projectile] [entity]
-  (proj/move entity))
+(defmethod move [:projectile] [entity & [speed]]
+  (proj/move entity speed))
 
-(defmethod move [:player] [entity vector]
-  (player/move entity vector))
+(defmethod move [:player] [entity vector & [speed]]
+  (player/move entity vector speed))
 
-(defmethod move [:kamikaze] [entity vector]
-  (kamikaze/move entity vector))
+(defmethod move [:kamikaze] [entity vector & [speed]]
+  (kamikaze/move entity vector speed))
 
-(defmethod move [:shooter] [entity vector]
-  (shooter/move entity vector))
+(defmethod move [:shooter] [entity vector  & [speed]]
+  (shooter/move entity vector speed))
 ; END MOVEMENT
 
 ; PROJECTILE CREATION

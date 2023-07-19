@@ -38,7 +38,7 @@
   (let [player (:player state)
         vec (input-to-vector player (:inputs state))
         vector (if (e/is-alive? player) vec {:vec-x 0 :vec-y 0})
-        updated-player (e/move player vector)]
+        updated-player (e/move player vector (:speed state))]
     (assoc state :player updated-player)))
 
 (defn correct-positions [state]
