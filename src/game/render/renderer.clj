@@ -151,13 +151,29 @@
         (display-game-over state))))
 ; END RENDER STEPS
 
+(defn sub-image [image state]
+  (let [ratio (if (contains? (:inputs state) :slow) 0.5 1)
+        disp-x (:disp-x (:bounds state))
+        disp-y (:disp-y (:bounds state))
+        w (* ratio disp-x)
+        h (* ratio disp-y)
+        x (* (/ (:x (:player state)) disp-x) (- disp-x w))
+        y (* (/ (:y (:player state)) disp-y) (- disp-y h))
+        sub (.getSubimage image x y w h)
+        new (new-image disp-x disp-y)]
+    (.drawImage ^Graphics (.createGraphics new) sub 0 0 disp-x disp-y nil)
+    new))
+
+(sub-image (new-image 1000 1000) (transform-state (state/get-state) 1000 1000))
+
 ; Render the state, takes requires to know what the maximum resolution of the display is with x and y
 (defn render [x y]
-  (let [raw-state @state/entity-state
+  (let [raw-state (state/get-state)
         display-state (transform-state raw-state x y)]
     (-> (new-image x y)
         (draw (:player display-state))
         (draw-collection (:e-proj display-state))
         (draw-collection (:p-proj display-state))
         (draw-collection (:enemies display-state))
-        (draw-interface display-state))))
+        (draw-interface display-state)
+        (sub-image display-state))))
