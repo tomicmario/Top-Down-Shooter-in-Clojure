@@ -14,6 +14,12 @@
         (assoc :p-proj p-proj)
         (assoc :e-proj e-proj))))
 
+(defn translate-mouse-position [state]
+  (let [bounds (:bounds state)
+        x (* (:x (:mouse state)) (- (:max-x bounds) (:min-x bounds)))
+        y (* (:y (:mouse state))(- (:max-y bounds) (:min-y bounds)))]
+    (assoc state :mouse {:x x :y y})))
+
 (defn generate-next-tick[state]
   (let [proj-data (future (proj/next-tick state))
         player-data (future (player/next-tick state))
@@ -26,11 +32,14 @@
 (defn init-scene[min-x min-y max-x max-y]
   (let [new-bounds {:min-x min-x :min-y min-y
                     :max-x max-x :max-y max-y}]
-    (reset! state/bounds new-bounds)))
+    (-> (state/get-state)
+        (assoc :bounds new-bounds)
+        (state/update-state))))
 
 ; ENTIRE FRAME LOGIC
 (defn next-tick []
   (-> (state/get-state)
+      (translate-mouse-position)
       (generate-next-tick)
       (state/update-state)))
 
