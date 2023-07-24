@@ -4,7 +4,7 @@
 
 (def exclusion-radius 150)
 
-(def max-enemy 10)
+(def max-enemy 2)
 
 (defn get-collision-data [entity projectiles]
   (let [collide-cond (fn [e] (common/colliding? entity e))

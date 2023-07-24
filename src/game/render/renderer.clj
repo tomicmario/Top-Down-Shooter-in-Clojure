@@ -4,7 +4,8 @@
   (:import [java.awt Color Graphics2D Graphics Font])
   (:import [javax.imageio ImageIO])
   (:require [game.state :as state]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [game.render.stateAdapter :as state-adapter]))
 
 (def font (Font. "TimesRoman" Font/BOLD 20))
 
@@ -92,30 +93,8 @@
   (draw-image-rotation image player player-image))
 ; END BASIC DRAW FUNCTIONS
 
-; ADAPTING STATE TO MATCH DISPLAY
 (defn get-health-ratio [entity]
   (/ (:health entity) (:max-health entity)))
-
-(defn adapt-ratio [entity x-ratio y-ratio]
-  (-> entity
-      (assoc :x (* (:x entity) x-ratio))
-      (assoc :y (* (:y entity) y-ratio))
-      (assoc :width (* (:width entity) x-ratio))
-      (assoc :height (* (:height entity) y-ratio))
-      (assoc :angle (- (/ Math/PI 4) (:angle entity)))))
-
-(defn transform-state [state x y]
-  (let [bounds (:bounds state)
-        x-ratio (/ x (:max-x bounds))
-        y-ratio (/ y (:max-y bounds))
-        fn (fn [e] (adapt-ratio e x-ratio y-ratio))]
-    (-> state
-        (assoc :player (fn (:player state)))
-        (assoc :p-proj (mapv fn (:p-proj state)))
-        (assoc :e-proj (mapv fn (:e-proj state)))
-        (assoc :enemies (mapv fn (:enemies state)))
-        (assoc-in [:bounds :disp-x] (* x-ratio (:max-x bounds)))
-        (assoc-in [:bounds :disp-y] (* y-ratio (:max-y bounds))))))
 ; END ADAPTING STATE FOR DISPLAY
 
 ; RENDER STEPS
@@ -126,9 +105,9 @@
   image)
 
 (defn display-game-over [image state]
-  (let [bounds (:bounds state)
-        middle-x (/ (:disp-x bounds) 2)
-        middle-y (/ (:disp-y bounds) 2)]
+  (let [bounds (:display-max state)
+        middle-x (/ (:x bounds) 2)
+        middle-y (/ (:y bounds) 2)]
     (if (> (:health (:player state)) 0)
       image
       (draw-label image middle-x middle-y "Game Over" Color/BLACK))))
@@ -152,28 +131,30 @@
 ; END RENDER STEPS
 
 (defn sub-image [image state]
-  (let [ratio (if (contains? (:inputs state) :slow) 0.5 1)
-        disp-x (:disp-x (:bounds state))
-        disp-y (:disp-y (:bounds state))
-        w (* ratio disp-x)
-        h (* ratio disp-y)
-        x (* (/ (:x (:player state)) disp-x) (- disp-x w))
-        y (* (/ (:y (:player state)) disp-y) (- disp-y h))
+  (let [disp-x (:x (:display-max state))
+        disp-y (:y (:display-max state))
+        ratio (:ratio state)
+        bounds (:bounds state)
+        render-bounds (:render-bounds state)
+        w (* (:x ratio) disp-x)
+        h (* (:y ratio) disp-y)
+        x (* (/ (:min-x render-bounds) (:max-x bounds)) disp-x)
+        y (* (/ (:min-y render-bounds) (:max-y bounds)) disp-y)
         sub (.getSubimage image x y w h)
         new (new-image disp-x disp-y)]
     (.drawImage ^Graphics (.createGraphics new) sub 0 0 disp-x disp-y nil)
     new))
 
-(sub-image (new-image 1000 1000) (transform-state (state/get-state) 1000 1000))
-
 ; Render the state, takes requires to know what the maximum resolution of the display is with x and y
 (defn render [x y]
   (let [raw-state (state/get-state)
-        display-state (transform-state raw-state x y)]
+        display-state (state-adapter/transform-state raw-state x y)]
     (-> (new-image x y)
+        (sub-image display-state)
         (draw (:player display-state))
         (draw-collection (:e-proj display-state))
         (draw-collection (:p-proj display-state))
         (draw-collection (:enemies display-state))
-        (draw-interface display-state)
-        (sub-image display-state))))
+        (draw-interface display-state))))
+
+(render 1000 1000)

@@ -4,7 +4,7 @@
 
 (def bounds {:min-x 0.0 :min-y 0.0 :max-x 500.0 :max-y 500.0})
 
-(def display-range {:x 250 :y 250})
+(def render-bounds {:x 100 :y 100})
 
 (defn default-player []
   (let [x (/ (:max-x bounds) 2)
@@ -14,7 +14,7 @@
 (defn default-state []
   {:player (default-player) :p-proj [] :e-proj []
    :enemies [] :timestamp 0 :bounds bounds :score 0 :speed 1
-   :display-range display-range})
+   :render-bounds render-bounds})
 
 ; STATE VARIABLES
 (def inputs (atom #{}))
