@@ -4,6 +4,24 @@
             [game.logic.enemyHandler :as enemies]
             [game.state :as state]))
 
+(defn generate-range [center range bounds]
+  (let [full-range (* range 2)
+        attempt-max (Math/min ^Double (+ center range) ^Double (:max bounds))
+        attempt-min (Math/max ^Double (- center range) ^Double (:min bounds))
+        min (Math/max ^Double (- attempt-max full-range) ^Double (:min bounds))
+        max (Math/min ^Double (+ attempt-min full-range) ^Double (:max bounds))]
+    {:min min :max max}))
+
+(defn generate-render-bounds [state]
+  (let [center (:player state)
+        bounds (:bounds state)
+        range (:render-range state)
+        x-range (generate-range (:x center) (:x range) {:min (:min-x bounds) :max (:max-x bounds)})
+        y-range (generate-range (:y center) (:y range) {:min (:min-y bounds) :max (:max-y bounds)})
+        render-bounds {:min-x (:min x-range) :max-x (:max x-range)
+                       :min-y (:min y-range) :max-y (:max y-range)}]
+    (assoc state :render-bounds render-bounds )))
+
 (defn unify-data [state proj-data player-data enemy-data]
   (let [p-proj (concat (:p-proj proj-data) (:p-proj player-data))
         e-proj (concat (:e-proj proj-data) (:e-proj enemy-data))]
@@ -15,10 +33,10 @@
         (assoc :e-proj e-proj))))
 
 (defn translate-mouse-position [state]
-  (let [bounds (:bounds state)
+  (let [bounds (:render-bounds state)
         x (* (:x (:mouse state)) (- (:max-x bounds) (:min-x bounds)))
         y (* (:y (:mouse state))(- (:max-y bounds) (:min-y bounds)))]
-    (assoc state :mouse {:x x :y y})))
+    (assoc state :mouse {:x (+ x (:min-x bounds)) :y (+ y (:min-y bounds))})))
 
 (defn generate-next-tick[state]
   (let [proj-data (future (proj/next-tick state))
@@ -39,6 +57,7 @@
 ; ENTIRE FRAME LOGIC
 (defn next-tick []
   (-> (state/get-state)
+      (generate-render-bounds)
       (translate-mouse-position)
       (generate-next-tick)
       (state/update-state)))
