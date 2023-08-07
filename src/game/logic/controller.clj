@@ -4,6 +4,21 @@
             [game.logic.enemyHandler :as enemies]
             [game.state :as state]))
 
+(def min-range 120)
+(def max-range 150)
+(def range-diff-frame 3)
+
+(defn apply-and-keep-in-bounds [num min max op diff]
+  (Math/min (Math/max ^Double (op num diff) ^Double min) ^Double max))
+
+(defn transform-render-range [state]
+  (let [op (if (contains? (:inputs state) :slow) - +)
+        x-range (:x (:render-range state))
+        y-range (:y (:render-range state))
+        x (apply-and-keep-in-bounds x-range min-range max-range op range-diff-frame)
+        y (apply-and-keep-in-bounds y-range min-range max-range op range-diff-frame)]
+    {:x x :y y}))
+
 (defn generate-range [center range bounds]
   (let [full-range (* range 2)
         attempt-max (Math/min ^Double (+ center range) ^Double (:max bounds))
@@ -15,12 +30,14 @@
 (defn generate-render-bounds [state]
   (let [center (:player state)
         bounds (:bounds state)
-        range (:render-range state)
+        range (transform-render-range state)
         x-range (generate-range (:x center) (:x range) {:min (:min-x bounds) :max (:max-x bounds)})
         y-range (generate-range (:y center) (:y range) {:min (:min-y bounds) :max (:max-y bounds)})
         render-bounds {:min-x (:min x-range) :max-x (:max x-range)
                        :min-y (:min y-range) :max-y (:max y-range)}]
-    (assoc state :render-bounds render-bounds )))
+    (-> state 
+        (assoc :render-bounds render-bounds)
+        (assoc :render-range range))))
 
 (defn unify-data [state proj-data player-data enemy-data]
   (let [p-proj (concat (:p-proj proj-data) (:p-proj player-data))

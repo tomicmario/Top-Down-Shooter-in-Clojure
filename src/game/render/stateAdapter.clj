@@ -3,21 +3,16 @@
 (defn within? [p min max]
   (and (>= p min) (<= p max)))
 
-(defn generate-ratio [disp-bounds bounds]
-  (let [range-x (- (:max-x disp-bounds) (:min-x disp-bounds))
+(defn generate-ratio [state]
+  (let [render-bound (:render-bounds state)
+        bounds (:bounds state)
+        range-x (- (:max-x render-bound) (:min-x render-bound))
         max-range-x (- (:max-x bounds) (:min-x bounds))
-        range-y (- (:max-y disp-bounds) (:min-y disp-bounds))
+        range-y (- (:max-y render-bound) (:min-y render-bound))
         max-range-y (- (:max-y bounds) (:min-y bounds))
         x-ratio (/ range-x max-range-x)
         y-ratio (/ range-y max-range-y)]
-    {:x x-ratio :y y-ratio}))
-
-(defn generate-display-bounds [state]
-  (let [render-bound (:render-bounds state)
-        bounds (:bounds state)
-        ratios (generate-ratio render-bound bounds)]
-    (-> state
-        (assoc :ratio ratios))))
+    (assoc state :ratio {:x x-ratio :y y-ratio})))
 
 (defn renderable? [e bounds]
   (let [max-x (+ (:x e) (/ (:width e) 2))
@@ -56,6 +51,6 @@
 (defn transform-state [state x y]
   (-> state
       (assoc :display-max {:x x :y y})
-      (generate-display-bounds)
+      (generate-ratio)
       (filter-renderable)
       (adapt-entities)))
