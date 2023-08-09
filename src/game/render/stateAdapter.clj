@@ -34,19 +34,21 @@
         (assoc :enemies (filterv renderable enemies)))))
 
 (defn adapt-ratio
-  [{:keys [x y width height] :as entity} ; entity
+  [{:keys [x y width height angle] :as entity} ; entity
    {:keys [min-x min-y max-x max-y]} ;bounds
-   ratio disp]
-  (-> entity
-      (assoc :x (* (/ (- x min-x) (- max-x min-x)) (:x disp)))
-      (assoc :y (* (/ (- y min-y) (- max-y min-y)) (:y disp)))
-      (assoc :width (/ width (:x ratio) 0.5))
-      (assoc :height (/ height (:y ratio) 0.5))
-      (assoc :angle (- (/ Math/PI 4) (:angle entity)))))
+   disp]
+  (let [range-x (- max-x min-x)
+        range-y (- max-y min-y)]
+    (-> entity
+        (assoc :x (* (/ (- x min-x) range-x) (:x disp)))
+        (assoc :y (* (/ (- y min-y) range-y) (:y disp)))
+        (assoc :width (* (/ width range-x) (:x disp)))
+        (assoc :height (* (/ height range-y) (:y disp)))
+        (assoc :angle (- (/ Math/PI 4) angle)))))
 
 (defn adapt-entities 
-  [{:keys [ratio render-bounds display-max player e-proj p-proj enemies] :as state}]
-  (let [fn (fn [e] (adapt-ratio e render-bounds ratio display-max))]
+  [{:keys [render-bounds display-max player e-proj p-proj enemies] :as state}]
+  (let [fn (fn [e] (adapt-ratio e render-bounds display-max))]
     (-> state
         (assoc :player (fn player))
         (assoc :p-proj (mapv fn p-proj))
