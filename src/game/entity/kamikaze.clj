@@ -2,13 +2,16 @@
   (:require [game.entity.common :as common])
   (:require [game.entity.projectile :as proj]))
 
-(defn move [entity vector speed]
+(defn move 
+  [entity vector speed]
   (common/default-move entity vector speed))
 
-(defn create [x y] 
+(defn create 
+  [x y] 
   (common/entity x y 100 20 20 0.6 :kamikaze {:last-shot -100 :firerate 0.5}))
 
-(defn create-projectile [entity target]
+(defn create-projectile
+  [entity target]
   (let [x (:x entity)
         y (:y entity)
         vec (common/gen-vector entity target)]

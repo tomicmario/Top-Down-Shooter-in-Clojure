@@ -8,8 +8,10 @@
 (def dimension (Dimension. 1000 500))
 (def exit-action JFrame/EXIT_ON_CLOSE)
 
-(defn width []
+(defn width 
+  []
   (.getWidth panel))
 
-(defn height []
+(defn height 
+  []
   (.getHeight panel))

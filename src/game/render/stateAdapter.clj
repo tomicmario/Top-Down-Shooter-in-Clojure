@@ -3,52 +3,58 @@
 (defn within? [p min max]
   (and (>= p min) (<= p max)))
 
-(defn generate-ratio [state]
-  (let [render-bound (:render-bounds state)
-        bounds (:bounds state)
-        range-x (- (:max-x render-bound) (:min-x render-bound))
+(defn generate-ratio 
+  [{:keys [render-bounds bounds] :as state}]
+  (let [range-x (- (:max-x render-bounds) (:min-x render-bounds))
         max-range-x (- (:max-x bounds) (:min-x bounds))
-        range-y (- (:max-y render-bound) (:min-y render-bound))
+        range-y (- (:max-y render-bounds) (:min-y render-bounds))
         max-range-y (- (:max-y bounds) (:min-y bounds))
         x-ratio (/ range-x max-range-x)
         y-ratio (/ range-y max-range-y)]
     (assoc state :ratio {:x x-ratio :y y-ratio})))
 
-(defn renderable? [e bounds]
-  (let [max-x (+ (:x e) (/ (:width e) 2))
-        min-x (- (:x e) (/ (:width e) 2))
-        max-y (+ (:y e) (/ (:height e) 2))
-        min-y (- (:y e) (/ (:height e) 2))]
-    (and (or (within? max-x (:min-x bounds) (:max-x bounds))
-             (within? min-x (:min-x bounds) (:max-x bounds)))
-         (or (within? max-y (:min-y bounds) (:max-y bounds))
-             (within? min-y (:min-y bounds) (:max-y bounds))))))
+(defn renderable? 
+  [{:keys [x y width height]} ;entity
+   {:keys [min-x min-y max-x max-y ]}] ;bounds 
+  (let [entity-max-x (+ x (/ width 2))
+        entity-min-x (- x (/ width 2))
+        entity-max-y (+ y (/ height 2))
+        entity-min-y (- y (/ height 2))]
+    (and (or (within? entity-max-x min-x max-x )
+             (within? entity-min-x min-x max-x ))
+         (or (within? entity-max-y min-y max-y)
+             (within? entity-min-y min-y max-y)))))
 
-(defn filter-renderable [state]
-  (let [display-range (:render-bounds state)
-        renderable (fn [e] (renderable? e display-range))]
+(defn filter-renderable 
+  [{:keys [render-bounds p-proj e-proj enemies] :as state}]
+  (let [renderable (fn [e] (renderable? e render-bounds))]
     (-> state
-        (assoc :p-proj (filterv renderable (:p-proj state)))
-        (assoc :e-proj (filterv renderable (:e-proj state)))
-        (assoc :enemies (filterv renderable (:enemies state))))))
+        (assoc :p-proj (filterv renderable p-proj))
+        (assoc :e-proj (filterv renderable e-proj))
+        (assoc :enemies (filterv renderable enemies)))))
 
-(defn adapt-ratio [entity ratio bounds disp]
+(defn adapt-ratio
+  [{:keys [x y width height] :as entity} ; entity
+   {:keys [min-x min-y max-x max-y]} ;bounds
+   ratio disp]
   (-> entity
-      (assoc :x (* (/ (- (:x entity) (:min-x bounds)) (- (:max-x bounds) (:min-x bounds))) (:x disp)))
-      (assoc :y (* (/ (- (:y entity) (:min-y bounds)) (- (:max-y bounds) (:min-y bounds))) (:y disp)))
-      (assoc :width (/ (:width entity) (:x ratio) 0.5))
-      (assoc :height (/ (:height entity) (:y ratio) 0.5))
+      (assoc :x (* (/ (- x min-x) (- max-x min-x)) (:x disp)))
+      (assoc :y (* (/ (- y min-y) (- max-y min-y)) (:y disp)))
+      (assoc :width (/ width (:x ratio) 0.5))
+      (assoc :height (/ height (:y ratio) 0.5))
       (assoc :angle (- (/ Math/PI 4) (:angle entity)))))
 
-(defn adapt-entities [state]
-  (let [fn (fn [e] (adapt-ratio e (:ratio state) (:render-bounds state) (:display-max state)))]
+(defn adapt-entities 
+  [{:keys [ratio render-bounds display-max player e-proj p-proj enemies] :as state}]
+  (let [fn (fn [e] (adapt-ratio e render-bounds ratio display-max))]
     (-> state
-        (assoc :player (fn (:player state)))
-        (assoc :p-proj (mapv fn (:p-proj state)))
-        (assoc :e-proj (mapv fn (:e-proj state)))
-        (assoc :enemies (mapv fn (:enemies state))))))
+        (assoc :player (fn player))
+        (assoc :p-proj (mapv fn p-proj))
+        (assoc :e-proj (mapv fn e-proj))
+        (assoc :enemies (mapv fn enemies )))))
 
-(defn transform-state [state x y]
+(defn transform-state 
+  [state x y]
   (-> state
       (assoc :display-max {:x x :y y})
       (generate-ratio)

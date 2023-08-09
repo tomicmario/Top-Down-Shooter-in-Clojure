@@ -10,7 +10,8 @@
 (def font (Font. "TimesRoman" Font/BOLD 20))
 
 ; ENTITY IMAGES
-(defn get-image-from-file [path]
+(defn get-image-from-file 
+  [path]
   (ImageIO/read (io/file path)))
 
 (def bg (get-image-from-file "resources/Space001.png"))
@@ -25,7 +26,8 @@
 ; END ENTITY IMAGES
 
 ; BASIC DRAWING FUNCTIONS
-(defn draw-label [image x y text color]
+(defn draw-label 
+  [image x y text color]
   (let [graphics (.createGraphics image)]
     (doto ^Graphics2D graphics
       (.setPaint color)
@@ -33,10 +35,12 @@
       (.drawString ^String text ^Integer x ^Integer y)))
   image)
 
-(defn draw-image [image x y w h path]
+(defn draw-image 
+  [image x y w h path]
     (.drawImage ^Graphics image path w h x y nil))
 
-(defn new-image [x y]
+(defn new-image 
+  [x y]
   (let [image (BufferedImage. x y BufferedImage/TYPE_INT_RGB)
         graphics (.createGraphics image)]
     (doto ^Graphics2D graphics
@@ -45,7 +49,8 @@
     (draw-image ^Graphics graphics x y 0 0 bg)
     image))
 
-(defn draw-shape [image color shape]
+(defn draw-shape 
+  [image color shape]
   (let [c (if (nil? color) Color/RED color)
         graphics (.createGraphics image)]
     (doto ^Graphics2D graphics
@@ -53,58 +58,69 @@
       (.fill shape)))
   image)
 
-(defn draw-rect [image x y w h & [color]]
+(defn draw-rect 
+  [image x y w h & [color]]
   (let [shape (Rectangle2D$Double. x y w h)]
     (draw-shape image color shape))
   image)
 
-(defn draw-image-rotation [image entity disp]
-  (let [angle (- (:angle entity) Math/PI (/ Math/PI 4))
-        x (- (:x entity) (/ (:width entity) 2))
-        y (- (:y entity) (/ (:height entity) 2))
+(defn draw-image-rotation 
+  [image 
+   {:keys [x y width height angle]} ;entity 
+   disp]
+  (let [angle (- angle Math/PI (/ Math/PI 4))
+        new-x (- x (/ width 2))
+        new-y (- y (/ height 2))
         graphics (.createGraphics image)
         old-angle (.getTransform ^Graphics2D graphics)]
-    (.translate ^Graphics graphics (:x entity) (:y entity))
+    (.translate ^Graphics graphics x y)
     (.rotate ^Graphics2D graphics angle)
-    (.translate ^Graphics graphics (- (:x entity)) (- (:y entity)))
-    (draw-image ^Graphics graphics (:width entity) (:height entity) x y disp)
+    (.translate ^Graphics graphics (- x) (- y))
+    (draw-image ^Graphics graphics width height new-x new-y disp)
     (.setTransform ^Graphics2D graphics ^AffineTransform old-angle)
     image))
 
-(defn draw-image-ent [image entity disp]
+(defn draw-image-ent 
+  [image entity disp]
   (let [x (- (:x entity) (/ (:width entity) 2))
         y (- (:y entity) (/ (:height entity) 2))
         graphics (.createGraphics image)]
     (draw-image ^Graphics graphics (:width entity) (:height entity) x y disp) 
     image))
 
-(defmulti draw (fn [image entity] [(:type entity)]))
+(defmulti draw 
+  (fn [image entity] [(:type entity)]))
 
-(defmethod draw [:projectile] [image projectile]
+(defmethod draw [:projectile] 
+  [image projectile]
   (draw-image-ent image projectile projectile-image))
 
-(defmethod draw [:kamikaze] [image enemy]
+(defmethod draw [:kamikaze] 
+  [image enemy]
   (draw-image-rotation image enemy kamikaze-image))
 
-(defmethod draw [:shooter] [image enemy]
+(defmethod draw [:shooter] 
+  [image enemy]
   (draw-image-rotation image enemy shooter-image))
 
-(defmethod draw [:player] [image player]
+(defmethod draw [:player] 
+  [image player]
   (draw-image-rotation image player player-image))
-; END BASIC DRAW FUNCTIONS
 
-(defn get-health-ratio [entity]
-  (/ (:health entity) (:max-health entity)))
-; END ADAPTING STATE FOR DISPLAY
+(defn get-health-ratio 
+  [{:keys [health max-health]}]
+  (/ health max-health))
 
 ; RENDER STEPS
-(defn draw-collection [image coll]
+(defn draw-collection 
+  [image coll]
   (let [reducer (fn [e] (draw image e))]
     (when-not (or (nil? coll) (empty? coll))
       (run! reducer coll)))
   image)
 
-(defn display-game-over [image state]
+(defn display-game-over 
+  [image state]
   (let [bounds (:display-max state)
         middle-x (/ (:x bounds) 2)
         middle-y (/ (:y bounds) 2)]
@@ -112,30 +128,30 @@
       image
       (draw-label image middle-x middle-y "Game Over" Color/BLACK))))
 
-(defn draw-healthbar [image entity]
-  (let [x  (- (:x entity) (/ (:width entity) 2))
-        y (+ (- (:y entity) (:height entity)) 5)
+(defn draw-healthbar 
+  [image
+   {:keys [x y width height] :as entity}] 
+  (let [x  (- x (/ width 2))
+        y (+ (- y height) 5)
         ratio (get-health-ratio entity)
-        width (* ratio (:width entity))
+        disp-width (* ratio width)
         c (if (< ratio 0.3) Color/RED Color/GREEN)]
-    (draw-rect image x y width 5 c)))
+    (draw-rect image x y disp-width 5 c)))
 
-(defn draw-interface [image state]
-  (let [player (:player state)
-        enemies (:enemies state)]
+(defn draw-interface 
+  [image
+   {:keys [player enemies score] :as state}]
     (run! (fn [e] (draw-healthbar image e)) enemies)
     (-> image
         (draw-healthbar player)
-        (draw-label 10 20 (str "Score : " (:score state)) Color/BLACK)
-        (display-game-over state))))
-; END RENDER STEPS
+        (draw-label 10 20 (str "Score : " score) Color/BLACK)
+        (display-game-over state)))
 
-(defn sub-image [image state]
-  (let [disp-x (:x (:display-max state))
-        disp-y (:y (:display-max state))
-        ratio (:ratio state)
-        bounds (:bounds state)
-        render-bounds (:render-bounds state)
+(defn sub-image 
+  [image 
+   {:keys [ratio bounds render-bounds display-max]}] ;state
+  (let [disp-x (:x display-max)
+        disp-y (:y display-max)
         w (* (:x ratio) disp-x)
         h (* (:y ratio) disp-y)
         x (* (/ (:min-x render-bounds) (:max-x bounds)) disp-x)
@@ -146,7 +162,8 @@
     new))
 
 ; Render the state, takes requires to know what the maximum resolution of the display is with x and y
-(defn render [x y]
+(defn render 
+  [x y]
   (let [raw-state (state/get-state)
         display-state (state-adapter/transform-state raw-state x y)]
     (-> (new-image x y)

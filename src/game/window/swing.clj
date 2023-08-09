@@ -5,7 +5,9 @@
             [game.window.jframe :as j]
             [game.render.renderer :as r]))
 
-(defn init [title] ; init of ui components
+(defn init 
+  "init of ui components"
+  [title]
   (doto j/frame
     (.setTitle title)
     (.setVisible true)
@@ -24,7 +26,9 @@
     (.addMouseListener im/click-listener))
   (.pack j/frame))
 
-(defn display [] ; Simply displays a render of the current state
+(defn display 
+  "Displays a render of the current state"
+  [] 
   (let [panelGraphics (.getGraphics j/panel)
         image (r/render (j/width) (j/height))]
     (doto ^Graphics2D panelGraphics
