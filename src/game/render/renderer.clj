@@ -89,7 +89,7 @@
     image))
 
 (defmulti draw 
-  (fn [image entity] [(:type entity)]))
+  (fn [_ entity] [(:type entity)]))
 
 (defmethod draw [:projectile]
   [image projectile]

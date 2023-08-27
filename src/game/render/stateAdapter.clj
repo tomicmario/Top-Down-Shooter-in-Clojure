@@ -1,8 +1,5 @@
 (ns game.render.stateAdapter)
 
-(defn within? [p min max]
-  (and (>= p min) (<= p max)))
-
 (defn generate-ratio 
   [{:keys [render-bounds bounds] :as state}]
   (let [range-x (- (:max-x render-bounds) (:min-x render-bounds))
@@ -20,10 +17,10 @@
         entity-min-x (- x (/ width 2))
         entity-max-y (+ y (/ height 2))
         entity-min-y (- y (/ height 2))]
-    (and (or (within? entity-max-x min-x max-x )
-             (within? entity-min-x min-x max-x ))
-         (or (within? entity-max-y min-y max-y)
-             (within? entity-min-y min-y max-y)))))
+    (and (or (<= min-x entity-max-x max-x )
+             (<= min-x entity-min-x max-x ))
+         (or (<= min-y entity-max-y max-y)
+             (<= min-y entity-min-y max-y)))))
 
 (defn filter-renderable 
   [{:keys [render-bounds p-proj e-proj enemies] :as state}]

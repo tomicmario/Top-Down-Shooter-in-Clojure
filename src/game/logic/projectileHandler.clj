@@ -28,7 +28,7 @@
 (defn remove-collided 
   "requires the map of get-collision data on collided"
   [projectiles collided] 
-  (let [colliding-proj (into #{} collided)
+  (let [colliding-proj (set collided)
         has-not-collided? (fn [p] (not (contains? colliding-proj p)))]
     (filterv has-not-collided? projectiles)))
 

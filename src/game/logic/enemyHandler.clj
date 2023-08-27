@@ -35,7 +35,7 @@
         updated-enemies (common/extract-from-data :entity proj-data)]
     (-> state
         (assoc :enemies updated-enemies)
-        (assoc :new-proj (into [](flatten shot-projectiles))))))
+        (assoc :new-proj (vec (flatten shot-projectiles))))))
 
 (defn correct-positions 
   [{:keys [bounds enemies] :as state}]

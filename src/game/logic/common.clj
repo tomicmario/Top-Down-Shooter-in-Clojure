@@ -1,11 +1,11 @@
 (ns game.logic.common
   (:require [game.entity.entities :as e]))
 
-(defn in-bounds? 
-  [entity 
+(defn in-bounds?
+  [entity
    {:keys [bounds]}]
-    (and (>= (:x entity) (:min-x bounds)) (>= (:y entity) (:min-y bounds))
-         (<= (:x entity) (:max-x bounds)) (<= (:y entity) (:max-y bounds))))
+  (and (<= (:min-x bounds) (:x entity) (:max-x bounds))
+       (<= (:min-y bounds) (:y entity) (:max-y bounds))))
 
 (defn get-collide-damage 
   [collisions]
