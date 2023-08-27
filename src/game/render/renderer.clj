@@ -91,9 +91,12 @@
 (defmulti draw 
   (fn [image entity] [(:type entity)]))
 
-(defmethod draw [:projectile] 
+(defmethod draw [:projectile]
   [image projectile]
-  (draw-image-ent image projectile projectile-image))
+  (let [adapted-proj (-> projectile
+                         (assoc :width (+ 10 (:width projectile)))
+                         (assoc :height (+ 10 (:height projectile))))]
+    (draw-image-ent image adapted-proj projectile-image)))
 
 (defmethod draw [:kamikaze] 
   [image enemy]

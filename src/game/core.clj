@@ -7,19 +7,17 @@
 (def display-frame-time-ms 8)
 (def max-coordinate 500)
 
-(defn schedule-task 
+(defn schedule-task
   [task interval-ms]
-  (let [last-execution-time (atom (System/currentTimeMillis))]
-    (while true
-      ; the purpose is that the thread sleeps when the frame is about to get simulated too fast
-      (let [current-time (System/currentTimeMillis)
-            time-diff (- current-time @last-execution-time)]
-        ;(when (> time-diff interval-ms) (println (str" Slow frame by " (- time-diff interval-ms) "ms")))
-        (when (>= time-diff interval-ms)
-          (task)
-          (reset! last-execution-time current-time))
-        (when (< time-diff interval-ms)
-          (Thread/sleep 1))))))
+  (loop [last (System/currentTimeMillis)]
+    ; the purpose is that the thread sleeps when the frame is about to get simulated too fast
+    (let [current-time (System/currentTimeMillis)
+          time-diff (- current-time last)
+          last-render-time (if (>= time-diff interval-ms) current-time last)]
+      ;(when (> time-diff interval-ms) (println (str " Slow frame by " (- time-diff interval-ms) "ms")))
+      (if (>= time-diff interval-ms) (task)
+          (Thread/sleep 1))
+      (recur last-render-time))))
 
 (defn simulate-game 
   []
