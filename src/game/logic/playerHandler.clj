@@ -15,7 +15,7 @@
   (let [target (common/get-target player state)]
     (if (common/can-shoot? player state)
       (let [updated-entity (e/update-timestamp player timestamp)]
-        {:entity updated-entity :projectiles [(e/create-projectile updated-entity target)]})
+        {:entity updated-entity :projectiles (e/create-projectile updated-entity target)})
       {:entity player :projectiles []})))
 
 (defn player-shoot 

@@ -1,6 +1,8 @@
 (ns game.logic.enemyHandler
   (:require [game.entity.entities :as e]
-            [game.logic.common :as common]))
+            [game.logic.common :as common]
+            [game.logic.enemyHandler :as enemies]
+            [game.state :as state]))
 
 (def exclusion-radius 150)
 
@@ -79,14 +81,20 @@
         {:x rand-x :y rand-y})))
 
 (defn add-enemy 
-  [{:keys [enemies] :as state}]
-  (if (< (count enemies) max-enemy)
+  [state]
     (let [en-fn (e/random-enemy) ; enemy create function
           rand-cor (rand-coordinates state)
-          new-enemy (en-fn (:x rand-cor) (:y rand-cor))
-          enemies (conj enemies new-enemy)]
-      (assoc state :enemies enemies))
-    state))
+          new-enemy (en-fn (:x rand-cor) (:y rand-cor))]
+      new-enemy))
+
+(defn add-enemies
+  [{:keys [enemies] :as state}]
+  (loop [new-enemies enemies]
+    (if (<=(count new-enemies) max-enemy)
+      (recur (conj new-enemies (add-enemy state)))
+      (assoc state :enemies new-enemies))))
+
+(add-enemies (state/get-state))
 
 (defn return-enemy-data 
   [{:keys [enemies new-proj score]}]
@@ -107,6 +115,6 @@
       (move-enemies)
       (correct-positions)
       (enemies-shoot)
-      (add-enemy)
+      (add-enemies)
       (update-angle-enemies)
       (return-enemy-data)))
