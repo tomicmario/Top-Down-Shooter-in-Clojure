@@ -1,8 +1,7 @@
 (ns game.logic.enemyHandler
   (:require [game.entity.entities :as e]
             [game.logic.common :as common]
-            [game.logic.enemyHandler :as enemies]
-            [game.state :as state]))
+            [game.logic.enemyHandler :as enemies]))
 
 (def exclusion-radius 150)
 
@@ -14,51 +13,24 @@
         colliding (filterv collide-cond projectiles)]
     {:entity entity :projectiles colliding}))
 
-(defn treat-collision-enemies 
-  [{:keys [p-proj enemies] :as state}]
-  (let [collision-data (mapv (fn [e] (get-collision-data e p-proj)) enemies) 
-        updated-enemies (mapv common/apply-damage collision-data)]
-    (-> state
-        (assoc :enemies updated-enemies))))
-
-(defn get-shoot-data 
-  [entity state]
+(defn shoot 
+  [state entity]
   (let [timestamp (:timestamp state)
         target (common/get-target entity state)]
-    (if (common/can-shoot? entity state)
-      (let [updated-entity (e/update-timestamp entity timestamp)]
-        {:entity updated-entity :projectiles (e/create-projectile updated-entity target)})
-      {:entity entity :projectiles []})))
+  (if (== timestamp (:last-shot entity)) (e/create-projectile entity target) :none)))
 
-(defn enemies-shoot 
-  [{:keys [enemies] :as state}]
-  (let [proj-data (mapv (fn [e] (get-shoot-data e state)) enemies)
-        shot-projectiles (common/extract-from-data :projectiles proj-data)
-        updated-enemies (common/extract-from-data :entity proj-data)]
-    (-> state
-        (assoc :enemies updated-enemies)
-        (assoc :new-proj (vec (flatten shot-projectiles))))))
+(defn xf-shot
+  [state]
+  (comp
+   (map #(shoot state %))
+   (filter coll?)))
 
-(defn correct-positions 
-  [{:keys [bounds enemies] :as state}]
-  (let [corrected-entity (fn [e] (e/correct-position e bounds))]
-    (assoc state :enemies (mapv corrected-entity enemies))))
-
-(defn move-enemies 
-  [{:keys [speed enemies] :as state}]
-  (let [get-entity-vec (fn [e] (e/gen-vector e (common/get-target e state)))
-        move-enemy (fn [e] (e/move e (get-entity-vec e) speed))
-        enemies (map move-enemy enemies)]
-    (assoc state :enemies enemies)))
-
-(defn clean-enemies 
-  [{:keys [enemies score] :as state}]
-  (let [updated-enemies (filterv e/is-alive? enemies)
-        killed (- (count enemies) (count updated-enemies))
-        new-score (+ score killed)]
-    (-> state
-        (assoc :enemies updated-enemies)
-        (assoc :score new-score))))
+(defn enemies-shoot
+  [{:keys [enemies] :as t-state}
+   state]
+  (-> t-state
+      (assoc! :new-proj (persistent!
+                         (transduce (xf-shot state) conj! (transient []) enemies)))))
 
 (defn spawn-coordinates 
   [bounds player exclusion]
@@ -82,19 +54,16 @@
 
 (defn add-enemy 
   [state]
-    (let [en-fn (e/random-enemy) ; enemy create function
-          rand-cor (rand-coordinates state)
-          new-enemy (en-fn (:x rand-cor) (:y rand-cor))]
-      new-enemy))
+    (let [rand-cor (rand-coordinates state)]
+      ((e/random-enemy) (:x rand-cor) (:y rand-cor))))
 
 (defn add-enemies
-  [{:keys [enemies] :as state}]
-  (loop [new-enemies enemies]
-    (if (<=(count new-enemies) max-enemy)
-      (recur (conj new-enemies (add-enemy state)))
-      (assoc state :enemies new-enemies))))
-
-(add-enemies (state/get-state))
+  [{:keys [enemies] :as t-state}
+   state]
+  (loop [new-enemies (transient enemies)]
+    (if (<= (count new-enemies) max-enemy)
+      (recur (conj! new-enemies (add-enemy state)))
+      (assoc! t-state :enemies (persistent! new-enemies)))))
 
 (defn return-enemy-data 
   [{:keys [enemies new-proj score]}]
@@ -102,19 +71,36 @@
    :e-proj new-proj
    :score score})
 
-(defn update-angle-enemies 
-  [{:keys [enemies] :as state}]
-  (let [updated-enemy (fn [e] (e/update-angle e (common/get-target e state)))]
-    (assoc state :enemies (mapv updated-enemy enemies))))
+(defn xf-enemies
+  [{:keys [timestamp p-proj speed bounds] :as state}]
+  (let [get-entity-vec (fn [e] (e/gen-vector e (common/get-target e state)))
+        move-enemy (fn [e] (e/move e (get-entity-vec e) speed))]
+    (comp
+     (map #(get-collision-data % p-proj)) 
+     (map common/apply-damage)
+     (filter e/is-alive?)
+     (map move-enemy)
+     (map #(e/correct-position % bounds))
+     (map #(e/update-angle % (common/get-target % state)))
+     (map #(if (common/can-shoot? % state) (e/update-timestamp % timestamp) %)))))
 
-(defn next-tick 
+(defn update-current-enemies
+  [t-state state]
+  (assoc! t-state :enemies (persistent! 
+                            (transduce (xf-enemies state) conj! 
+                                       (transient []) (:enemies state)))))
+
+(defn update-score
+  [t-state state]
+  (let [killed (- (count (:enemies state)) (count (:enemies t-state)))]
+    (assoc! t-state :score (+ (:score state) killed))))
+
+(defn next-tick
   [state]
-  (-> state
-      (treat-collision-enemies)
-      (clean-enemies)
-      (move-enemies)
-      (correct-positions)
-      (enemies-shoot)
-      (add-enemies)
-      (update-angle-enemies)
+  (-> (transient {})
+      (update-current-enemies state)
+      (update-score state)
+      (enemies-shoot state)
+      (add-enemies state)
+      (persistent!)
       (return-enemy-data)))
