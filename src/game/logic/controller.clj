@@ -2,6 +2,7 @@
   (:require [game.logic.projectileHandler :as proj]
             [game.logic.playerHandler :as player]
             [game.logic.enemyHandler :as enemies]
+            [game.logic.partitionner :as part]
             [game.state :as state]))
 
 (def min-range 120)
@@ -66,6 +67,16 @@
         (unify-data (deref proj-data) (deref player-data) (deref enemy-data))
         (assoc :speed new-speed))))
 
+(defn generate-next-tick-single-thread
+  [state]
+  (let [proj-data  (proj/next-tick state)
+        player-data (player/next-tick state)
+        enemy-data (enemies/next-tick state)
+        new-speed (if (contains? (:inputs state) :slow) 0.2 1)]
+    (-> state
+        (unify-data proj-data player-data enemy-data)
+        (assoc :speed new-speed))))
+
 (defn init-scene
   [min-x min-y max-x max-y]
   (let [new-bounds {:min-x min-x :min-y min-y
@@ -74,13 +85,21 @@
         (assoc :bounds new-bounds)
         (state/update-state))))
 
-; ENTIRE FRAME LOGIC
-(defn next-tick 
-  []
-  (-> (state/get-state)
-      (generate-render-bounds)
-      (translate-mouse-position)
-      (generate-next-tick)
-      (state/update-state)))
+(defn partition-space [state]
+  (let [partitions (part/partitionned-coll (:bounds state))]
+    (-> state
+        (assoc :e-proj-p (part/store-to-partition partitions (:e-proj state)))
+        (assoc :p-proj-p (part/store-to-partition partitions (:p-proj state)))
+        (assoc :enemies-p (part/store-to-partition partitions (:enemies state))))))
 
-(next-tick)
+; ENTIRE FRAME LOGIC
+(defn next-tick
+  []
+  (let [state (state/get-state)]
+    (-> state
+        (generate-render-bounds)
+        (translate-mouse-position)
+        (partition-space)
+        ;(generate-next-tick)
+        (generate-next-tick-single-thread)
+        (state/update-state))))

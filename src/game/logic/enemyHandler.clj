@@ -2,11 +2,12 @@
   (:require [game.entity.entities :as e]
             [game.logic.common :as common]
             [game.logic.enemyHandler :as enemies]
-            [game.state :as state]))
+            [game.state :as state]
+            [game.logic.partitionner :as part]))
 
 (def exclusion-radius 150)
 
-(def max-enemy 2)
+(def max-enemy 4000)
 
 (defn get-collision-data 
   [entity projectiles]
@@ -14,9 +15,17 @@
         colliding (filterv collide-cond projectiles)]
     {:entity entity :projectiles colliding}))
 
-(defn treat-collision-enemies 
+(defn treat-collision-enemies-partitionned
+  [{:keys [p-proj-p enemies] :as state}]
+  (let [near (fn [e] (part/adjacent-entities e p-proj-p))
+        collision-data (mapv (fn [e] (get-collision-data e (near e))) enemies) 
+        updated-enemies (mapv common/apply-damage collision-data)]
+    (-> state
+        (assoc :enemies updated-enemies))))
+
+(defn treat-collision-enemies
   [{:keys [p-proj enemies] :as state}]
-  (let [collision-data (mapv (fn [e] (get-collision-data e p-proj)) enemies) 
+  (let [collision-data (mapv (fn [e] (get-collision-data e p-proj)) enemies)
         updated-enemies (mapv common/apply-damage collision-data)]
     (-> state
         (assoc :enemies updated-enemies))))
@@ -110,7 +119,9 @@
 (defn next-tick 
   [state]
   (-> state
-      (treat-collision-enemies)
+      (assoc :enemies (flatten (:enemies state)))
+      ;(treat-collision-enemies)
+      (treat-collision-enemies-partitionned)
       (clean-enemies)
       (move-enemies)
       (correct-positions)

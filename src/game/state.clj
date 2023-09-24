@@ -6,18 +6,19 @@
 
 (def render-range {:x 150 :y 150})
 
+
 (defn default-player 
   []
   (let [x (/ (:max-x bounds) 2)
         y (/ (:max-y bounds) 2)]
   (e/default-player x y)))
 
-(defn default-state 
+(defn default-state
   []
   {:player (default-player) :p-proj [] :e-proj []
-   :enemies [] :timestamp 0 :bounds bounds :score 0 :speed 1
-   :render-range render-range
-   :render-bounds bounds})
+       :enemies [] :timestamp 0 :bounds bounds :score 0 :speed 1
+       :render-range render-range
+       :render-bounds bounds})
 
 ; STATE VARIABLES
 (def inputs (atom #{}))
@@ -61,11 +62,12 @@
 
 (defn clean-state 
   [state]
-  (-> state
-      (assoc :timestamp (+ (:timestamp state) (:speed state)))
-      (dissoc :inputs)
-      (dissoc :mouse)
-      (assoc :bounds (:bounds state))))
+  (-> (transient state)
+      (assoc! :timestamp (+ (:timestamp state) (:speed state)))
+      (dissoc! :inputs)
+      (dissoc! :mouse)
+      (assoc! :bounds (:bounds state))
+      (persistent!)))
 
 (defn save-state 
   [state] 

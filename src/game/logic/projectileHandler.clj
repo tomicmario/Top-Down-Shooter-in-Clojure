@@ -1,6 +1,7 @@
 (ns game.logic.projectileHandler
   (:require [game.entity.entities :as e]
-            [game.logic.common :as common]))
+            [game.logic.common :as common]
+            [game.logic.partitionner :as part]))
 
 (defn proj-valid? 
   [entity state]
@@ -32,13 +33,28 @@
         has-not-collided? (fn [p] (not (contains? colliding-proj p)))]
     (filterv has-not-collided? projectiles)))
 
-(defn treat-collision-player 
+(defn treat-collision-player-partitionned 
+  [{:keys [player e-proj-p e-proj] :as state}]
+  (let [close-proj (part/adjacent-entities player e-proj-p)
+        collided-proj (get-collision-data player close-proj)
+        new-proj (remove-collided e-proj (:projectiles collided-proj))]
+    (assoc state :e-proj new-proj)))
+
+(defn treat-collision-enemies-partitionned
+  [{:keys [p-proj p-proj-p enemies] :as state}]
+  (let [near (fn [e] (part/adjacent-entities e p-proj-p))
+        collision-data (mapv (fn [e] (get-collision-data e (near e))) enemies)
+        collided-proj  (flatten (common/extract-from-data :projectiles collision-data))
+        new-proj (remove-collided p-proj collided-proj)]
+    (assoc state :p-proj new-proj)))
+
+(defn treat-collision-player
   [{:keys [player e-proj] :as state}]
   (let [collided-proj (get-collision-data player e-proj)
         new-proj (remove-collided e-proj (:projectiles collided-proj))]
     (assoc state :e-proj new-proj)))
 
-(defn treat-collision-enemies 
+(defn treat-collision-enemies
   [{:keys [p-proj enemies] :as state}]
   (let [collision-data (mapv (fn [e] (get-collision-data e p-proj)) enemies)
         collided-proj  (flatten (common/extract-from-data :projectiles collision-data))
@@ -64,7 +80,9 @@
   [state]
   (-> state
       (clean-projectiles)
-      (treat-collision-enemies)
-      (treat-collision-player)
+      (treat-collision-enemies-partitionned)
+      (treat-collision-player-partitionned)
+      ;(treat-collision-enemies)
+      ;(treat-collision-player)
       (move-proj)
       (return-projectiles)))

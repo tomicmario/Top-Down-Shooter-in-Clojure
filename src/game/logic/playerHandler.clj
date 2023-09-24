@@ -1,9 +1,18 @@
 (ns game.logic.playerHandler
   (:require [game.entity.entities :as e]
             [game.logic.common :as common]
-            [game.logic.playerHandler :as player]))
+            [game.logic.playerHandler :as player]
+            [game.logic.partitionner :as part]))
 
-(defn treat-collision-player 
+(defn treat-collision-player-partitionned
+  [{:keys [player e-proj-p] :as state}]
+  (let [nearby-proj (part/adjacent-entities player e-proj-p)
+        collided-proj (common/get-collision-data player nearby-proj)
+        updated-player (common/apply-damage collided-proj)]
+    (-> state
+        (assoc :player updated-player))))
+
+(defn treat-collision-player
   [{:keys [player e-proj] :as state}]
   (let [collided-proj (common/get-collision-data player e-proj)
         updated-player (common/apply-damage collided-proj)]
@@ -59,7 +68,8 @@
 (defn next-tick 
   [state]
   (-> state
-      (treat-collision-player)
+      (treat-collision-player-partitionned)
+      ;(treat-collision-player)
       (move-player)
       (correct-positions)
       (player-shoot)

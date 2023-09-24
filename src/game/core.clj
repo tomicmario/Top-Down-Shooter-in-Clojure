@@ -14,7 +14,8 @@
     (let [current-time (System/currentTimeMillis)
           time-diff (- current-time last)
           last-render-time (if (>= time-diff interval-ms) current-time last)]
-      ;(when (> time-diff interval-ms) (println (str " Slow frame by " (- time-diff interval-ms) "ms")))
+      (println "Frame!")
+      (when (> time-diff interval-ms) (println (str " Slow frame by " (- time-diff interval-ms) "ms")))
       (if (>= time-diff interval-ms) (task)
           (Thread/sleep 1))
       (recur last-render-time))))
@@ -31,12 +32,13 @@
 
 (defn start-threads 
   []
-  (let [move-thread (future (simulate-game))
-        display-thread (future (render-game))]
-    (deref move-thread)
+  (let [display-thread (future (render-game))]
+    (simulate-game)
     (deref display-thread)))
 
 (defn -main 
   "launch the game"
   []
-  (start-threads))
+  ;(start-threads)
+  (simulate-game)
+  )
