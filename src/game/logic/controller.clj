@@ -42,12 +42,13 @@
   [state proj-data player-data enemy-data]
   (let [p-proj (concat (:p-proj proj-data) (:p-proj player-data))
         e-proj (concat (:e-proj proj-data) (:e-proj enemy-data))]
-    (-> state
-        (assoc :player (:player player-data))
-        (assoc :enemies (:enemies enemy-data))
-        (assoc :score (:score enemy-data))
-        (assoc :p-proj p-proj)
-        (assoc :e-proj e-proj))))
+    (-> (transient state)
+        (assoc! :player (:player player-data))
+        (assoc! :enemies (:enemies enemy-data))
+        (assoc! :score (:score enemy-data))
+        (assoc! :p-proj p-proj)
+        (assoc! :e-proj e-proj)
+        (persistent!))))
 
 (defn translate-mouse-position 
   [{:keys [render-bounds mouse] :as state}]
@@ -82,5 +83,3 @@
       (translate-mouse-position)
       (generate-next-tick)
       (state/update-state)))
-
-(next-tick)

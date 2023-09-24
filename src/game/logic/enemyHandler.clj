@@ -71,18 +71,21 @@
    :e-proj new-proj
    :score score})
 
+(defn assign-target
+  [entity state]
+  (assoc entity :target (common/get-target entity state)))
+
 (defn xf-enemies
   [{:keys [timestamp p-proj speed bounds] :as state}]
-  (let [get-entity-vec (fn [e] (e/gen-vector e (common/get-target e state)))
-        move-enemy (fn [e] (e/move e (get-entity-vec e) speed))]
     (comp
+     (map #(assign-target % state))
      (map #(get-collision-data % p-proj)) 
      (map common/apply-damage)
      (filter e/is-alive?)
-     (map move-enemy)
+     (map #(e/move % (e/gen-vector % (:target %)) speed))
      (map #(e/correct-position % bounds))
-     (map #(e/update-angle % (common/get-target % state)))
-     (map #(if (common/can-shoot? % state) (e/update-timestamp % timestamp) %)))))
+     (map #(e/update-angle % (:target %)))
+     (map #(if (common/can-shoot? % state) (e/update-timestamp % timestamp) %))))
 
 (defn update-current-enemies
   [t-state state]

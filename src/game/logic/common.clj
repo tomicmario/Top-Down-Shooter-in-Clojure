@@ -30,18 +30,18 @@
     (closer-than-distance? a b max-dist)))
 
 (defmulti get-target 
-  (fn [entity & []] [(:type entity)]))
+  (fn [entity _] [(:type entity)]))
 
 (defmethod get-target [:kamikaze]
-  [[] state]
+  [_ state]
   (:player state))
 
 (defmethod get-target [:shooter] 
-  [[] state]
+  [_ state]
   (:player state))
 
 (defmethod get-target [:player] 
-  [[] state]
+  [_ state]
   (:mouse state))
 
 (defn get-collision-data 
@@ -56,7 +56,7 @@
   (e/damage-entity (get-collide-damage (:projectiles d)) (:entity d)))
 
 (defmulti can-shoot?
-  (fn [entity & []] [(:type entity)]))
+  (fn [entity _] [(:type entity)]))
 
 (defmethod can-shoot? [:shooter]
   [entity state]
