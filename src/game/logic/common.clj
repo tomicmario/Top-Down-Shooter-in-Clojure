@@ -11,11 +11,6 @@
   [collisions]
   (reduce + (mapv :health collisions)))
 
-(defn extract-from-data 
-  "Util function for pairs, filters nils"
-  [type data] 
-  (filterv identity (mapv type data)))
-
 (defn closer-than-distance? 
   "Simplified version not using sqrt"
   [a b d]
@@ -33,12 +28,12 @@
   (fn [entity _] [(:type entity)]))
 
 (defmethod get-target [:kamikaze]
-  [_ state]
-  (:player state))
+  [_ {:keys [player]}]
+  {:x (:x player) :y (:y player)})
 
-(defmethod get-target [:shooter] 
-  [_ state]
-  (:player state))
+(defmethod get-target [:shooter]
+  [_ {:keys [player]}]
+  {:x (:x player) :y (:y player)})
 
 (defmethod get-target [:player] 
   [_ state]
