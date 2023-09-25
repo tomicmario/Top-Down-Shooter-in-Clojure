@@ -3,7 +3,7 @@
 
 (defn create 
   [x y damage radius speed vector & [max-ttl]]
-  (let [proj-data (merge vector {:max-ttl max-ttl})]
+  (let [proj-data (assoc vector :max-ttl (if (nil? max-ttl) -1 max-ttl))]
     (common/entity x y damage radius radius speed :projectile proj-data)))
 
 (defn move 
