@@ -44,16 +44,10 @@
   [_ state]
   (:mouse state))
 
-(defn get-collision-data 
-  [entity projectiles]
-  (let [collide-cond (fn [e] (colliding? entity e))
-        colliding (filterv collide-cond projectiles)]
-    {:entity entity :projectiles colliding}))
-
 (defn apply-damage 
   "requires the map of get-collision data"
   [d]
-  (e/damage-entity (get-collide-damage (:projectiles d)) (:entity d)))
+  (e/damage-entity (:entity d) (get-collide-damage (:projectiles d)) ))
 
 (defmulti can-shoot?
   (fn [entity _] [(:type entity)]))
@@ -74,4 +68,5 @@
   [entity state]
   (and (> (:timestamp state) (+ (:last-shot entity) (:firerate entity)))
        (contains? (:inputs state) :click)
+       (not (contains? (:inputs state) :reset)) ;temp hack
        (e/is-alive? entity)))

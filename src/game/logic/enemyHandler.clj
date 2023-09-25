@@ -29,8 +29,8 @@
   [{:keys [enemies] :as t-state}
    state]
   (-> t-state
-      (assoc! :new-proj (persistent!
-                         (transduce (xf-shot state) conj! (transient []) enemies)))))
+      (assoc! :e-proj (persistent!
+                       (transduce (xf-shot state) conj! (transient []) enemies)))))
 
 (defn spawn-coordinates 
   [bounds player exclusion]
@@ -64,12 +64,6 @@
     (if (<= (count new-enemies) max-enemy)
       (recur (conj! new-enemies (add-enemy state)))
       (assoc! t-state :enemies (persistent! new-enemies)))))
-
-(defn return-enemy-data 
-  [{:keys [enemies new-proj score]}]
-  {:enemies enemies
-   :e-proj new-proj
-   :score score})
 
 (defn assign-target
   [entity state]
@@ -105,5 +99,4 @@
       (update-score state)
       (enemies-shoot state)
       (add-enemies state)
-      (persistent!)
-      (return-enemy-data)))
+      (persistent!)))

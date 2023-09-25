@@ -14,7 +14,7 @@
   (common/gen-vector entity target))
 
 (defn damage-entity 
-  [damage entity]
+  [entity damage]
   (assoc entity :health (- (:health entity) damage)))
 
 (defn update-timestamp 
@@ -76,7 +76,7 @@
 
 ; PROJECTILE CREATION
 (defmulti create-projectile 
-  (fn [entity & []] [(:type entity)]))
+  (fn [entity _] [(:type entity)]))
 
 (defmethod create-projectile [:player]
   [entity mousePosition]
