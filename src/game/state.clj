@@ -1,35 +1,19 @@
 (ns game.state
-  (:require [game.entity.entities :as e]
-            [game.state :as state]))
-
-(def bounds {:min-x 0.0 :min-y 0.0 :max-x 500.0 :max-y 500.0})
-
-(def render-range {:x 150 :y 150})
-
-(defn default-player 
-  []
-  (let [x (/ (:max-x bounds) 2)
-        y (/ (:max-y bounds) 2)]
-  (e/default-player x y)))
-
-(defn default-state 
-  []
-  {:player (default-player) :p-proj [] :e-proj []
-   :enemies [] :timestamp 0 :bounds bounds :score 0 :speed 1
-   :render-range render-range
-   :render-bounds bounds})
+  (:require [game.entity.field :as f]))
 
 ; STATE VARIABLES
 (def inputs (atom #{}))
 (def mouse (atom {:x 0 :y 0}))
-(def entity-state (atom (default-state)))
+(def entity-state (atom (f/default-field)))
 
 (defn get-state  
   []
   (let [inputs @inputs
         mouse @mouse
         entities @entity-state]
-    (merge entities {:inputs inputs :mouse mouse})))
+    (-> entities
+        (assoc :inputs inputs)
+        (assoc :mouse mouse))))
 
 ; INPUTS UPDATE
 (defn add-input 
@@ -50,26 +34,14 @@
     (swap! mouse assoc :y new-y)))
 ; END INPUTS UPDATE
 
-; GLOBAL STATE UPDATE
-(defn default-entity-state 
-  []
-  (reset! entity-state (default-state)))
-
 (defn reset 
   []
-  (default-entity-state))
-
-(defn clean-state 
-  [state]
-  (-> state
-      (assoc :timestamp (+ (:timestamp state) (:speed state)))
-      (dissoc :inputs)
-      (dissoc :mouse)
-      (assoc :bounds (:bounds state))))
+  (reset! entity-state (f/default-field)))
 
 (defn save-state 
   [state] 
-    (reset! entity-state (clean-state state)))
+    (reset! entity-state 
+            (assoc state :timestamp (+ (:timestamp state) (:speed state)))))
 
 (defn update-state 
   [state]

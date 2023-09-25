@@ -2,10 +2,9 @@
   (:require [game.logic.projectileHandler :as proj]
             [game.logic.playerHandler :as player]
             [game.logic.enemyHandler :as enemies]
+            [game.entity.field :as f]
             [game.state :as state]))
 
-(def min-range 120)
-(def max-range 150)
 (def range-diff-frame 3)
 
 (defn apply-and-keep-in-bounds [num min max op diff]
@@ -14,8 +13,8 @@
 (defn transform-render-range
   [{:keys [inputs render-range]}]
   (let [op (if (contains? inputs :slow) - +)
-        x (apply-and-keep-in-bounds (:x render-range) min-range max-range op range-diff-frame)
-        y (apply-and-keep-in-bounds (:y render-range) min-range max-range op range-diff-frame)]
+        x (apply-and-keep-in-bounds (:x render-range) f/min-range f/max-range op range-diff-frame)
+        y (apply-and-keep-in-bounds (:y render-range) f/min-range f/max-range op range-diff-frame)]
     {:x x :y y}))
 
 (defn generate-range 
@@ -67,15 +66,6 @@
         (unify-data (deref proj-data) (deref player-data) (deref enemy-data))
         (assoc :speed new-speed))))
 
-(defn init-scene
-  [min-x min-y max-x max-y]
-  (let [new-bounds {:min-x min-x :min-y min-y
-                    :max-x max-x :max-y max-y}]
-    (-> (state/get-state)
-        (assoc :bounds new-bounds)
-        (state/update-state))))
-
-; ENTIRE FRAME LOGIC
 (defn next-tick 
   []
   (-> (state/get-state)

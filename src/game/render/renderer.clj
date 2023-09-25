@@ -176,5 +176,3 @@
         (draw-collection (:p-proj display-state))
         (draw-collection (:enemies display-state))
         (draw-interface display-state))))
-
-(render 1000 1000)

@@ -5,7 +5,6 @@
 
 (def logic-frame-time-ms 10)
 (def display-frame-time-ms 8)
-(def max-coordinate 500)
 
 (defn schedule-task
   [task interval-ms]
@@ -21,7 +20,6 @@
 
 (defn simulate-game 
   []
-  (controller/init-scene 0 0 max-coordinate max-coordinate)
   (schedule-task controller/next-tick logic-frame-time-ms))
 
 (defn render-game 

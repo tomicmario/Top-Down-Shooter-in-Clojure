@@ -19,7 +19,7 @@
 
 (defn update-timestamp 
   [entity timestamp]
-  (merge entity {:last-shot timestamp}))
+  (assoc entity :last-shot timestamp))
 
 (defn update-angle
   [entity target]

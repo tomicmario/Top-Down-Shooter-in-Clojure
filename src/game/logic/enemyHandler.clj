@@ -7,6 +7,15 @@
 
 (def max-enemy 2)
 
+(defn get-collide-damage
+  [collisions]
+  (reduce + (mapv :health collisions)))
+
+(defn apply-damage
+  "requires the map of get-collision data"
+  [d]
+  (e/damage-entity (:entity d) (get-collide-damage (:projectiles d))))
+
 (defn get-collision-data 
   [entity projectiles]
   (let [collide-cond (fn [e] (common/colliding? entity e))
@@ -72,14 +81,15 @@
 (defn xf-enemies
   [{:keys [timestamp p-proj speed bounds] :as state}]
     (comp
-     (map #(assign-target % state))
-     (map #(get-collision-data % p-proj)) 
-     (map common/apply-damage)
-     (filter e/is-alive?)
-     (map #(e/move % (e/gen-vector % (:target %)) speed))
-     (map #(e/correct-position % bounds))
-     (map #(e/update-angle % (:target %)))
-     (map #(if (common/can-shoot? % state) (e/update-timestamp % timestamp) %))))
+     (map #(assign-target % state))                         ;pre-calculate target
+     (map #(get-collision-data % p-proj))                   ;collect collided projectiles
+     (map apply-damage)                                     ;apply damage if any
+     (filter e/is-alive?)                                   ;remove dead
+     (map #(e/move % (e/gen-vector % (:target %)) speed))   ;move
+     (map #(e/correct-position % bounds))                   ;correct out of bound
+     (map #(e/update-angle % (:target %)))                  ;angle for display
+     (map #(if (common/can-shoot? % state)                  ;update timestamp as a way to signify they can shoot
+             (e/update-timestamp % timestamp) %))))
 
 (defn update-current-enemies
   [t-state state]

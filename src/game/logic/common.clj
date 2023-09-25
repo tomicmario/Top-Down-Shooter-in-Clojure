@@ -7,10 +7,6 @@
   (and (<= (:min-x bounds) (:x entity) (:max-x bounds))
        (<= (:min-y bounds) (:y entity) (:max-y bounds))))
 
-(defn get-collide-damage 
-  [collisions]
-  (reduce + (mapv :health collisions)))
-
 (defn closer-than-distance? 
   "Simplified version not using sqrt"
   [a b d]
@@ -39,11 +35,6 @@
   [_ state]
   (:mouse state))
 
-(defn apply-damage 
-  "requires the map of get-collision data"
-  [d]
-  (e/damage-entity (:entity d) (get-collide-damage (:projectiles d)) ))
-
 (defmulti can-shoot?
   (fn [entity _] [(:type entity)]))
 
@@ -63,5 +54,5 @@
   [entity state]
   (and (> (:timestamp state) (+ (:last-shot entity) (:firerate entity)))
        (contains? (:inputs state) :click)
-       (not (contains? (:inputs state) :reset)) ;temp hack
+       (< 2 (:timestamp state)) ;temp hack
        (e/is-alive? entity)))

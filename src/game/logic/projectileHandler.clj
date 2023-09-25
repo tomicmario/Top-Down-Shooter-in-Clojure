@@ -21,9 +21,9 @@
   [targets
    {:keys [speed] :as state}]
   (comp
-   (filter #(non-colliding-projectile? % targets))
-   (map #(e/move % speed))
-   (filter #(proj-valid? % state))))
+   (filter #(non-colliding-projectile? % targets)) ;remove projectiles that collided
+   (map #(e/move % speed))                         ;move the remaining projectiles
+   (filter #(proj-valid? % state))))               ;remove timed out or out-of-bound
 
 (defn treat-projectiles
   [projectiles target state]

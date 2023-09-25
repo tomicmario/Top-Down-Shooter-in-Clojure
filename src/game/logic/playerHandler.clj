@@ -34,7 +34,7 @@
         (#(if (e/is-alive? %)
             (e/update-angle % target) %))      ;update angle for display
         (e/correct-position bounds)            ;correct out of bounds
-        (#(if (common/can-shoot? player state) ;upddate timestamp as a way to signify the player can shoot
+        (#(if (common/can-shoot? player state) ;update timestamp as a way to signify the player can shoot
             (e/update-timestamp % timestamp) %)))))
 
 (defn shoot

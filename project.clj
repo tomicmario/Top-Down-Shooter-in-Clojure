@@ -5,7 +5,10 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [org.clojure/core.async "1.6.673"]]
-  :repl-options {:init-ns game.core} 
+  :repl-options {:init-ns game.core}
   :main game.core
-  :profiles {:uberjar {:aot :all}} 
+  :jvm-opts ["-XX:+UseSerialGC"
+               ;"-verbose:gc"
+             "-Xms128m" "-Xmx128m"]
+  :profiles {:uberjar {:aot :all}}
   :aot [game.core])

@@ -4,14 +4,14 @@
   (:require [game.state :as im]
             [game.window.jframe :as j]))
 
-(defn set-direction [fn event] ; A bit of a hack, because switch case didn't want to work
+(defn direction [event]
   (let  [keycode (.getKeyCode event)]
-    (when (= keycode KeyEvent/VK_W) (fn :up))
-    (when (= keycode KeyEvent/VK_S) (fn :down))
-    (when (= keycode KeyEvent/VK_A) (fn :left))
-    (when (= keycode KeyEvent/VK_D) (fn :right))
-    (when (= keycode KeyEvent/VK_R) (fn :reset))
-    (when (= keycode KeyEvent/VK_CONTROL) (fn :slow))))
+    (cond (= keycode KeyEvent/VK_W) :up
+          (= keycode KeyEvent/VK_S) :down
+          (= keycode KeyEvent/VK_A) :left
+          (= keycode KeyEvent/VK_D) :right
+          (= keycode KeyEvent/VK_R) :reset
+          (= keycode KeyEvent/VK_CONTROL) :slow)))
 
 (def mouse-listener
   (proxy [MouseInputAdapter] []
@@ -29,6 +29,5 @@
 
 (def key-listener
   (proxy [KeyAdapter] []
-    ;(keyTyped [#^KeyEvent e] (handlePress e))
-    (keyPressed [#^KeyEvent e] (set-direction im/add-input e))
-    (keyReleased [#^KeyEvent e] (set-direction im/remove-input e))))
+    (keyPressed [#^KeyEvent e] (im/add-input (direction e)))
+    (keyReleased [#^KeyEvent e] (im/remove-input (direction e)))))
