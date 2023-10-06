@@ -1,7 +1,8 @@
 (ns game.core
   (:gen-class)
   (:require [game.window.swing :as display]
-            [game.logic.controller :as controller]))
+            [game.logic.controller :as controller]
+            [clj-async-profiler.core :as prof]))
 
 (def logic-frame-time-ms 10)
 (def display-frame-time-ms 8)
@@ -27,14 +28,27 @@
   (display/init "Game") 
   (schedule-task display/display display-frame-time-ms))
 
-(defn start-threads 
+
+(defn start-threads
   []
   (let [move-thread (future (simulate-game))
         display-thread (future (render-game))]
     (deref move-thread)
     (deref display-thread)))
 
+
+(defn fn-to-profile
+  []
+  (dotimes [_ 200]
+    ((controller/next-tick)
+     (display/display))))
+
 (defn -main 
   "launch the game"
   []
-  (start-threads))
+  ;(display/init "Game")
+  ;(prof/profile (fn-to-profile))
+  (start-threads)
+  )
+
+
