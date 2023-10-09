@@ -1,9 +1,9 @@
-(ns game.entity.entities 
-  (:require [game.entity.projectile :as proj])
-  (:require [game.entity.player :as player])
-  (:require [game.entity.kamikaze :as kamikaze])
-  (:require [game.entity.shooter :as shooter])
-  (:require [game.entity.common :as common]))
+(ns game.entity.entities
+  (:require [game.entity.projectile :as proj]
+            [game.entity.player :as player]
+            [game.entity.kamikaze :as kamikaze]
+            [game.entity.shooter :as shooter]
+            [game.entity.common :as common]))
 
 (defn is-alive? 
   [entity]

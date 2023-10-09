@@ -1,6 +1,6 @@
 (ns game.entity.player
-  (:require [game.entity.common :as common])
-  (:require [game.entity.projectile :as proj]))
+  (:require [game.entity.common :as common]
+            [game.entity.projectile :as proj]))
 
 (def pellets 6)
 

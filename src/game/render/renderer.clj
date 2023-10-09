@@ -1,10 +1,10 @@
 (ns game.render.renderer
-  (:import [java.awt.geom Rectangle2D$Double AffineTransform])
-  (:import [java.awt Color Graphics2D Graphics Font])
-  (:import [javax.imageio ImageIO])
+  (:import [java.awt.geom Rectangle2D$Double AffineTransform]
+           [java.awt Color Graphics2D Graphics Font]
+           [javax.imageio ImageIO])
   (:require [game.state :as state]
             [clojure.java.io :as io]
-            [game.render.stateAdapter :as state-adapter]))
+            [game.stateAdapter :as state-adapter]))
 
 (def font (Font. "TimesRoman" Font/BOLD 20))
 

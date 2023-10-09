@@ -1,9 +1,9 @@
 (ns game.render.swing
-  (:import [java.awt Color]) 
-  (:import [javax.swing JFrame JPanel])
-  (:import [java.awt Dimension]) 
-  (:import [java.awt.event KeyAdapter KeyEvent MouseEvent])
-  (:import [javax.swing.event MouseInputAdapter])
+  (:import [java.awt Color]
+           [javax.swing JFrame JPanel]
+           [java.awt Dimension]
+           [java.awt.event KeyAdapter KeyEvent MouseEvent]
+           [javax.swing.event MouseInputAdapter])
   (:require [game.render.renderer :as r]
             [game.state :as im]))
 

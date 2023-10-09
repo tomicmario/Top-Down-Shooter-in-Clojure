@@ -1,6 +1,6 @@
 (ns game.entity.kamikaze
-  (:require [game.entity.common :as common])
-  (:require [game.entity.projectile :as proj]))
+  (:require [game.entity.common :as common]
+            [game.entity.projectile :as proj]))
 
 (defn move 
   [entity vector speed]

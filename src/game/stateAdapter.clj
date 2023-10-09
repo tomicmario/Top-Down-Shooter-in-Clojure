@@ -1,4 +1,4 @@
-(ns game.render.stateAdapter)
+(ns game.stateAdapter)
 
 (defn generate-ratio
   [render-bounds bounds]
@@ -49,8 +49,8 @@
 
 (defn transform-state
   [{:keys [p-proj e-proj enemies player render-bounds bounds] :as state}
-   x y]
-  (let [render-helper {:display-max {:x x :y y}
+   max-x max-y]
+  (let [render-helper {:display-max {:x max-x :y max-y}
                        :bounds bounds :render-bounds render-bounds
                        :ratio (generate-ratio render-bounds bounds)}]
     (-> (transient state)
