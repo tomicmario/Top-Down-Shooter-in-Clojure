@@ -41,25 +41,15 @@
       (assoc! :e-proj (persistent!
                        (transduce (xf-shot state) conj! (transient []) enemies)))))
 
-(defn spawn-coordinates 
-  [bounds player exclusion]
-  (let [diameter (* exclusion 2)
-        x (rand (- (:max-x bounds) diameter))
-        y (rand (- (:max-y bounds) diameter))
-        new-x (if (> (- (:x player) exclusion) x) x
-                  (+ x diameter))
-        new-y (if (> (- (:y player) exclusion) y) y
-                  (+ y diameter))]
-    {:x new-x :y new-y}))
-
-(defn rand-coordinates 
+(defn rand-coordinates ; uses loop, to fix
   "returns a coordinate not present withing a given amount of units from the player"
   [{:keys [bounds player]}]
-  (let [rand-x (rand (:max-x bounds))
+  (loop []
+   (let [rand-x (rand (:max-x bounds))
         rand-y (rand (:max-y bounds))
-        close-enough? (common/closer-than-distance? {:x rand-x :y rand-y} player exclusion-radius)]
-    (if close-enough? (spawn-coordinates bounds player exclusion-radius)
-        {:x rand-x :y rand-y})))
+        close-data (filterv #(common/closer-than-distance? {:x rand-x :y rand-y} % exclusion-radius) player)]
+    (if (first close-data) (recur)
+        {:x rand-x :y rand-y}))))
 
 (defn add-enemy 
   [state]
@@ -69,7 +59,7 @@
 (defn add-enemies
   [{:keys [enemies] :as t-state}
    state]
-  (loop [new-enemies (transient enemies)]
+   (loop [new-enemies (transient enemies)]
     (if (<= (count new-enemies) max-enemy)
       (recur (conj! new-enemies (add-enemy state)))
       (assoc! t-state :enemies (persistent! new-enemies)))))

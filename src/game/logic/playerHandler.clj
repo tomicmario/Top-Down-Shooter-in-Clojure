@@ -4,7 +4,8 @@
             [game.logic.playerHandler :as player]))
 
 (defn get-damage
-  [{:keys [e-proj player]}]
+  [player
+   {:keys [e-proj]}]
   (transduce (comp
               (filter #(common/colliding? player %))
               (map :health))
@@ -19,34 +20,38 @@
     {:vec-x x :vec-y y}))
 
 (defn gen-vector
-  [{:keys [player inputs]}]
+  [{:keys [inputs] :as player}]
   (if (e/is-alive? player)
     (input-to-vector player inputs)
     {:vec-x 0 :vec-y 0}))
 
 (defn update-player
-  [{:keys [player bounds speed timestamp] :as state}]
+  [player
+   {:keys [bounds speed timestamp] :as state}]
   (let [target (common/get-target player state)]
     (-> player
-        (e/damage-entity (get-damage state))   ;apply damage
-        (e/move (gen-vector state) speed)      ;move
-        (assoc :target target)                 ;assign target to not use multifn
+        (e/damage-entity (get-damage player state))   ;apply damage
+        (e/move (gen-vector player) speed)            ;move
+        (assoc :target target)                        ;assign target to not use multifn
         (#(if (e/is-alive? %)
-            (e/update-angle % target) %))      ;update angle for display
-        (e/correct-position bounds)            ;correct out of bounds
-        (#(if (common/can-shoot? player state) ;update timestamp as a way to signify the player can shoot
+            (e/update-angle % target) %))             ;update angle for display
+        (e/correct-position bounds)                   ;correct out of bounds
+        (#(if (common/can-shoot? player state)        ;update timestamp as a way to signify the player can shoot
             (e/update-timestamp % timestamp) %)))))
 
+(defn create-proj 
+  [player timestamp]
+  (if (== timestamp (:last-shot player))
+    (e/create-projectile player (:target player)) []))
+
 (defn shoot
-  [t_state
-   {:keys [player timestamp]}]
-  (if (== timestamp (:last-shot (:player t_state)))
-    (assoc! t_state :p-proj (e/create-projectile player (:target player)))
-    (assoc! t_state :p-proj [])))
+  [{:keys [player] :as t_state} 
+   {:keys [timestamp]}]
+  (assoc! t_state :p-proj (reduce concat (mapv #(create-proj % timestamp) player))))
 
 (defn next-tick
   [state]
   (-> (transient {})
-      (assoc! :player (update-player state))
+      (assoc! :player (mapv #(update-player % state) (:player state)))
       (shoot state)
       (persistent!)))

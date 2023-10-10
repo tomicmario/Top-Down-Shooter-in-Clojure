@@ -35,5 +35,5 @@
   [{:keys [player enemies e-proj p-proj] :as state}]
   (-> (transient {})
       (assoc! :p-proj (treat-projectiles p-proj enemies state))
-      (assoc! :e-proj (treat-projectiles e-proj [player] state))
+      (assoc! :e-proj (treat-projectiles e-proj player state))
       (persistent!)))

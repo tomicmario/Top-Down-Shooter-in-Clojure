@@ -12,7 +12,7 @@
 
 (defn default-player 
   [x y]
-  (common/entity x y 100 20 20 1 :player {:last-shot -100 :firerate 30}))
+  (common/entity x y 100 20 20 1 :player {:last-shot -100 :firerate 30 }))
 
 (defn new-projectile
   [x y target]

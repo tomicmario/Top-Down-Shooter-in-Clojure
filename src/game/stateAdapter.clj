@@ -48,7 +48,8 @@
    (transduce (xf-adapter state) conj! (transient []) coll)))
 
 (defn transform-state
-  [{:keys [p-proj e-proj enemies player render-bounds bounds] :as state}
+  [{:keys [render-bounds]}
+   {:keys [p-proj e-proj enemies player bounds] :as state}
    max-x max-y]
   (let [render-helper {:display-max {:x max-x :y max-y}
                        :bounds bounds :render-bounds render-bounds
@@ -59,5 +60,5 @@
         (assoc! :p-proj (adapt-coll p-proj render-helper))
         (assoc! :e-proj (adapt-coll e-proj render-helper))
         (assoc! :enemies (adapt-coll enemies render-helper))
-        (assoc! :player (adapt-ratio player render-bounds (:display-max render-helper)))
+        (assoc! :player (adapt-coll player render-helper))
         (persistent!))))

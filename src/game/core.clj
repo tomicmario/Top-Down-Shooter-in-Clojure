@@ -1,12 +1,21 @@
-(ns game.core
+(ns game.core 
   (:gen-class)
-  (:require [game.render.swing :as display]
+  (:require [game.jvm.swing :as display]
             [clj-async-profiler.core :as prof]
-            [game.logic.controller :as controller]))
+            [game.logic.controller :as controller]
+            [game.state :as state]))
 
 (def profiling false)
 (def logic-frame-time-ms 10)
-(def display-frame-time-ms 8)
+(def display-frame-time-ms 10)
+(def field (atom ()))
+(def inputs (atom ()))
+(def mouse (atom ()))
+
+(defn current-state 
+  []
+  (let [d-field @field d-input @inputs d-mouse @mouse]
+    (state/combined-state d-field d-input d-mouse)))
 
 (defn schedule-task
   [task interval-ms]
@@ -20,32 +29,51 @@
           (Thread/sleep 1))
       (recur last-render-time))))
 
-(defn simulate-game
+(defn next-tick
   []
-  (schedule-task controller/next-tick logic-frame-time-ms))
+  (let [swing-inputs (deref display/inputs)
+        swing-mouse (deref display/mouse-position-percent)]
+    (swap! inputs assoc 0 swing-inputs)
+    (swap! mouse assoc 0 swing-mouse)
+    (->> (current-state)
+         (controller/next-tick)
+         (reset! field))))
 
-(defn render-game
+(defn schedule-logic
+  []
+  (schedule-task next-tick logic-frame-time-ms))
+
+(defn render 
+  []
+  (display/display (current-state)))
+
+(defn schedule-render
   [] 
-  (schedule-task display/display display-frame-time-ms))
-
+  (schedule-task render display-frame-time-ms))
 
 (defn start-threads
   []
-  (let [move-thread (future (simulate-game))
-        display-thread (future (render-game))]
+  (let [move-thread (future (schedule-logic))
+        display-thread (future (schedule-render))]
     (deref move-thread)
     (deref display-thread)))
 
 (defn fn-to-profile
   []
   (dotimes [_ 200]
-    ((controller/next-tick)
-     (display/display))))
+    ((next-tick)
+     (render))))
+
+(defn init-components []
+  (reset! field  (state/get-new-state))
+  (reset! inputs (state/get-new-inputs))
+  (reset! mouse  (state/get-new-mouse))
+  (display/init "Game"))
 
 (defn -main
   "launch the game"
   []
-  (display/init "Game")
+  (init-components)
   (if profiling
     (prof/profile (fn-to-profile))
     (start-threads)))

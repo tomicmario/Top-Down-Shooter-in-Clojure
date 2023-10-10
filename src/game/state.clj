@@ -1,50 +1,29 @@
 (ns game.state
   (:require [game.entity.field :as f]))
 
-; STATE VARIABLES
-(def inputs (atom #{}))
-(def mouse (atom {:x 0 :y 0}))
-(def entity-state (atom (f/default-field)))
+(def supported-player 1)
+(def default-field (f/default-field))
+(def default-mouse {:x 0 :y 0})
+(def default-inputs #{})
 
-(defn get-state  
+(defn get-new-state
+  [] 
+  default-field) 
+
+(defn get-new-mouse
   []
-  (let [inputs @inputs
-        mouse @mouse
-        entities @entity-state]
-    (-> entities
-        (assoc :inputs inputs)
-        (assoc :mouse mouse))))
+  (vec (repeat supported-player default-mouse)))
 
-; INPUTS UPDATE
-(defn add-input 
-  [x]
-  (swap! inputs conj x))
+(defn get-new-inputs 
+  [] 
+  (vec (repeat supported-player default-inputs)))
 
-(defn remove-input 
-  [x]
-  (swap! inputs disj x))
+(defn assign-to-player 
+  [player mouse-coor inputs]
+   (-> player
+      (assoc :inputs inputs)
+      (assoc :mouse mouse-coor)))
 
-(defn update-mouse
-  "Requires the maximum size of display to have interpretable positions, 
-     that doesn't depend on a fixed size"
-  [x y max-x max-y]
-  (let [new-x (/ x max-x)
-        new-y (/ y max-y)]
-    (swap! mouse assoc :x new-x)
-    (swap! mouse assoc :y new-y)))
-; END INPUTS UPDATE
-
-(defn reset 
-  []
-  (reset! entity-state (f/default-field)))
-
-(defn save-state 
-  [state] 
-    (reset! entity-state 
-            (assoc state :timestamp (+ (:timestamp state) (:speed state)))))
-
-(defn update-state 
-  [state]
-  (if (contains? (:inputs state) :reset)
-    (reset)
-    (save-state state)))
+(defn combined-state
+  [field inputs mouse]
+   (assoc field :player (mapv assign-to-player (:player field) mouse inputs)))

@@ -2,8 +2,7 @@
   (:require [game.logic.projectileHandler :as proj]
             [game.logic.playerHandler :as player]
             [game.logic.enemyHandler :as enemies]
-            [game.entity.field :as f]
-            [game.state :as state]))
+            [game.entity.field :as f]))
 
 (def range-diff-frame 3)
 
@@ -11,13 +10,13 @@
   (Math/min (Math/max ^Double (op num diff) ^Double min) ^Double max))
 
 (defn transform-render-range
-  [{:keys [inputs render-range]}]
-  (let [op (if (contains? inputs :slow) - +)
+  [{:keys [speed render-range]}]
+  (let [op (if (= speed 1) + -)
         x (apply-and-keep-in-bounds (:x render-range) f/min-range f/max-range op range-diff-frame)
         y (apply-and-keep-in-bounds (:y render-range) f/min-range f/max-range op range-diff-frame)]
     {:x x :y y}))
 
-(defn generate-range 
+(defn generate-range
   [center range bounds]
   (let [full-range (* range 2)
         attempt-max (Math/min ^Double (+ center range) ^Double (:max bounds))
@@ -26,16 +25,23 @@
         max (Math/min ^Double (+ attempt-min full-range) ^Double (:max bounds))]
     {:min min :max max}))
 
-(defn generate-render-bounds 
-  [{:keys [player bounds] :as state}]
-  (let [range (transform-render-range state)
-        x-range (generate-range (:x player) (:x range) {:min (:min-x bounds) :max (:max-x bounds)})
+(defn generate-render-bounds-player
+  [player range
+   {:keys [bounds]}]
+  (let [x-range (generate-range (:x player) (:x range) {:min (:min-x bounds) :max (:max-x bounds)})
         y-range (generate-range (:y player) (:y range) {:min (:min-y bounds) :max (:max-y bounds)})
         render-bounds {:min-x (:min x-range) :max-x (:max x-range)
                        :min-y (:min y-range) :max-y (:max y-range)}]
-    (-> state 
+    (-> player
         (assoc :render-bounds render-bounds)
         (assoc :render-range range))))
+
+(defn generate-render-bounds
+  [{:keys [player] :as state}]
+  (let [range (transform-render-range state)]
+    (-> state
+        (assoc :render-range range) 
+        (assoc :player (mapv #(generate-render-bounds-player % range state) player)))))
 
 (defn unify-data
   [state proj-data player-data enemy-data]
@@ -49,27 +55,43 @@
         (assoc! :e-proj e-proj)
         (persistent!))))
 
-(defn translate-mouse-position 
-  [{:keys [render-bounds mouse] :as state}]
+(defn translate-mouse-position-player
+  [{:keys [render-bounds mouse] :as player}]
   (let [{:keys [min-x min-y max-x max-y]} render-bounds
         x (* (:x mouse) (- max-x min-x))
-        y (* (:y mouse)(- max-y min-y))]
-    (assoc state :mouse {:x (+ x min-x) :y (+ y min-y)})))
+        y (* (:y mouse) (- max-y min-y))]
+    (assoc player :mouse {:x (+ x min-x) :y (+ y min-y)})))
+
+(defn translate-mouse-position
+  [state]
+  (assoc state :player (mapv translate-mouse-position-player (:player state))))
 
 (defn generate-next-tick
   [state]
-  (let [proj-data (future (proj/next-tick state))
-        player-data (future (player/next-tick state))
-        enemy-data (future (enemies/next-tick state))
-        new-speed (if (contains? (:inputs state) :slow) 0.2 1)]
+  (let [proj-data (proj/next-tick state)
+        player-data (player/next-tick state)
+        enemy-data (enemies/next-tick state)]
     (-> state
-        (unify-data (deref proj-data) (deref player-data) (deref enemy-data))
-        (assoc :speed new-speed))))
+        (unify-data proj-data player-data enemy-data))))
 
-(defn next-tick 
-  []
-  (-> (state/get-state)
+(defn alter-speed 
+  [state]
+   (let [slow (filter #(contains? (:inputs %) :slow) (:player state))]
+     (if (first slow)
+       (assoc state :speed 0.2)
+       (assoc state :speed 1))))
+
+(defn reset-if-necessary
+  [state]
+ (let [reset (filter #(contains? (:inputs %) :reset) (:player state))] 
+  (if (first reset) (f/default-field) state)))
+
+(defn next-tick
+  [state]
+  (-> state
       (generate-render-bounds)
       (translate-mouse-position)
       (generate-next-tick)
-      (state/update-state)))
+      (assoc :timestamp (+ (:timestamp state) (:speed state)))
+      (alter-speed)
+      (reset-if-necessary)))

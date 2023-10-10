@@ -1,12 +1,13 @@
-(ns game.render.swing
+(ns game.jvm.swing
   (:import [java.awt Color]
            [javax.swing JFrame JPanel]
            [java.awt Dimension]
            [java.awt.event KeyAdapter KeyEvent MouseEvent]
            [javax.swing.event MouseInputAdapter])
-  (:require [game.render.renderer :as r]
-            [game.state :as im]))
+  (:require [game.jvm.renderer :as r]))
 
+(def mouse-position-percent (atom {:x 0 :y 0}))
+(def inputs (atom #{}))
 
 (def frame (JFrame.))
 (def panel
@@ -33,30 +34,48 @@
           (= keycode KeyEvent/VK_A) :left
           (= keycode KeyEvent/VK_D) :right
           (= keycode KeyEvent/VK_R) :reset
-          (= keycode KeyEvent/VK_CONTROL) :slow)))
+          (= keycode KeyEvent/VK_CONTROL) :slow
+          :else :undefined)))
+
+(defn update-mouse
+  "Requires the maximum size of display to have interpretable positions, 
+     that doesn't depend on a fixed size"
+  [x y max-x max-y]
+  (let [new-x (/ x max-x)
+        new-y (/ y max-y)]
+    (reset! mouse-position-percent {:x new-x :y new-y})))
 
 (def mouse-listener
   (proxy [MouseInputAdapter] []
     (mouseMoved [#^MouseEvent m]
-      (im/update-mouse (.getX m) (.getY m) (width) (height)))
+      (update-mouse (.getX m) (.getY m) (width) (height)))
     (mouseDragged [#^MouseEvent m]
-      (im/update-mouse (.getX m) (.getY m) (width) (height)))))
+      (update-mouse (.getX m) (.getY m) (width) (height)))))
+
+(defn add-input
+  [x]
+  (swap! inputs conj x))
+
+(defn remove-input
+  [x]
+  (swap! inputs disj x))
 
 (def click-listener
   (proxy [MouseInputAdapter] []
     (mousePressed [#^MouseEvent m]
-      (im/add-input :click))
+      (add-input :click))
     (mouseReleased [#^MouseEvent m]
-      (im/remove-input :click))))
+      (remove-input :click))))
 
 (def key-listener
   (proxy [KeyAdapter] []
-    (keyPressed [#^KeyEvent e] (im/add-input (direction e)))
-    (keyReleased [#^KeyEvent e] (im/remove-input (direction e)))))
+    (keyPressed [#^KeyEvent e] (add-input (direction e)))
+    (keyReleased [#^KeyEvent e] (remove-input (direction e)))))
 
 (defn init 
   "init of ui components"
   [title]
+
   (doto frame
     (.setTitle title)
     (.setVisible true)
@@ -77,5 +96,6 @@
 
 (defn display 
   "Displays a render of the current state"
-  [] 
+  [state]
+  (r/update-field state)
   (.repaint panel))
