@@ -16,7 +16,7 @@
 
 (defn default-field
   []
-  {:player [(default-player)] :p-proj [] :e-proj []
+  {:player [(default-player) (default-player)] :p-proj [] :e-proj []
    :enemies [] :timestamp 0 :bounds bounds :score 0 :speed 1
    :render-range render-range
    :render-bounds bounds})

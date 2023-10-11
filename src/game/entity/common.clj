@@ -32,6 +32,8 @@
 
 (defn default-move 
   [entity vector speed]
-  (let [spd (if (nil? speed) 1 speed)
+  (let [spd (or speed 1)
         pos (new-position entity vector spd)]
-    (apply-position entity pos)))
+    (if (not= (:type (:target entity)) (:type entity)) 
+      (apply-position entity pos)
+      entity)))

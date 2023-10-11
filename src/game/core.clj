@@ -8,6 +8,7 @@
 (def profiling false)
 (def logic-frame-time-ms 10)
 (def display-frame-time-ms 10)
+(def player-id 0)
 (def field (atom ()))
 (def inputs (atom ()))
 (def mouse (atom ()))
@@ -16,6 +17,11 @@
   []
   (let [d-field @field d-input @inputs d-mouse @mouse]
     (state/combined-state d-field d-input d-mouse)))
+
+(defn current-state-display
+  []
+  (-> (current-state)
+      (assoc :tracked player-id)))
 
 (defn schedule-task
   [task interval-ms]
@@ -33,8 +39,8 @@
   []
   (let [swing-inputs (deref display/inputs)
         swing-mouse (deref display/mouse-position-percent)]
-    (swap! inputs assoc 0 swing-inputs)
-    (swap! mouse assoc 0 swing-mouse)
+    (swap! inputs assoc player-id swing-inputs)
+    (swap! mouse assoc player-id swing-mouse)
     (->> (current-state)
          (controller/next-tick)
          (reset! field))))
@@ -45,7 +51,7 @@
 
 (defn render 
   []
-  (display/display (current-state)))
+  (display/display (current-state-display)))
 
 (defn schedule-render
   [] 

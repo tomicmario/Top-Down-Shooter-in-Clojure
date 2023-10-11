@@ -174,7 +174,7 @@
   (let [state @state-to-display]
     (if (nil? state)
       (draw-label panelGraphics 0 0 "Game is not running yet" Color/BLACK)
-      (let [first-player (peek (:player state))
+      (let [first-player (get (:player state) (:tracked state))
             display-state (state-adapter/transform-state first-player state max-x max-y)]
         (-> panelGraphics
             (draw-background first-player display-state)

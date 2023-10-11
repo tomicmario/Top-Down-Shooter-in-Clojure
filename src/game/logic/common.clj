@@ -7,32 +7,28 @@
   (and (<= (:min-x bounds) (:x entity) (:max-x bounds))
        (<= (:min-y bounds) (:y entity) (:max-y bounds))))
 
+(defn distance
+  "Simplified version not using sqrt"
+  [a b]
+  (let [distY (* (- (:y a) (:y b)) (- (:y a) (:y b)))
+        distX (* (- (:x a) (:x b)) (- (:x a) (:x b)))]
+    (+ distX distY)))
+
 (defn closer-than-distance? 
   "Simplified version not using sqrt"
   [a b d]
-  (let [dist (* d d)
-        distY (* (- (:y a) (:y b)) (- (:y a) (:y b)))
-        distX (* (- (:x a) (:x b)) (- (:x a) (:x b)))]
-    (> dist (+ distX distY))))
+    (> (* d d) (distance a b)))
 
 (defn colliding? 
   [a b]
   (let [max-dist (+ (/ (:width a) 2) (/ (:width b) 2))]
     (closer-than-distance? a b max-dist)))
 
-(defn new-target
-  [player-vec]
-  (let [index (int (rand (count player-vec)))
-        target (get player-vec index)]
-   {:x (:x target) :y (:y target) 
-    :health (:health target) :index index}))
-
 (defn default-player-target
-  [{:keys [target]} 
+  [self
    player-vec]
-  (let [updated-target (get player-vec (:index target))]
-    (if (and updated-target (e/is-alive? updated-target)) updated-target
-      (new-target player-vec))))
+  (or (first (sort-by #(distance self %) (filter e/is-alive? player-vec)))
+      self))
 
 (defmulti get-target 
   (fn [entity _] [(:type entity)]))
@@ -55,14 +51,15 @@
 
 (defmethod can-shoot? [:shooter]
   [entity state]
-  (> (:timestamp state) (+ (:last-shot entity) (:firerate entity))))
+  (and (> (:timestamp state) (+ (:last-shot entity) (:firerate entity)))
+       (not= (:type entity) (:type (:target entity)))))
 
 (defmethod can-shoot? [:kamikaze] 
   [entity state]
   (let [player (:target entity)
         shoot-distance 30]
     (and (closer-than-distance? entity player shoot-distance)
-         (e/is-alive? player)
+         (not= (:type entity) (:type (:target entity)))
          (> (:timestamp state) (+ (:last-shot entity) (:firerate entity))))))
 
 (defmethod can-shoot? [:player] 
