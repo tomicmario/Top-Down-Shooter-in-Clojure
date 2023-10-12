@@ -1,4 +1,4 @@
-(ns game.state
+(ns game.state.helper
   (:require [game.entity.field :as f]))
 
 (def supported-player 2)
@@ -6,7 +6,7 @@
 (def default-mouse {:x 0 :y 0})
 (def default-inputs #{})
 
-(defn get-new-state
+(defn get-new-field
   [] 
   default-field) 
 

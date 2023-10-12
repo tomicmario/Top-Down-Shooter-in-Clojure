@@ -1,7 +1,6 @@
 (ns game.logic.playerHandler
   (:require [game.entity.entities :as e]
-            [game.logic.common :as common]
-            [game.logic.playerHandler :as player]))
+            [game.logic.common :as common]))
 
 (defn get-damage
   [player

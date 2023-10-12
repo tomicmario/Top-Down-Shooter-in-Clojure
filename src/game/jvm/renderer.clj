@@ -3,7 +3,7 @@
            [java.awt Color Graphics2D Graphics Font]
            [javax.imageio ImageIO])
   (:require [clojure.java.io :as io]
-            [game.stateAdapter :as state-adapter]))
+            [game.state.adapter :as state-adapter]))
 
 (def font (Font. "TimesRoman" Font/BOLD 20))
 (def state-to-display (atom nil))

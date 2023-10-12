@@ -3,7 +3,7 @@
   (:require [game.jvm.swing :as display]
             [clj-async-profiler.core :as prof]
             [game.logic.controller :as controller]
-            [game.state :as state]))
+            [game.state.helper :as state-helper]))
 
 (def profiling false)
 (def logic-frame-time-ms 10)
@@ -16,7 +16,7 @@
 (defn current-state 
   []
   (let [d-field @field d-input @inputs d-mouse @mouse]
-    (state/combined-state d-field d-input d-mouse)))
+    (state-helper/combined-state d-field d-input d-mouse)))
 
 (defn current-state-display
   []
@@ -71,9 +71,9 @@
      (render))))
 
 (defn init-components []
-  (reset! field  (state/get-new-state))
-  (reset! inputs (state/get-new-inputs))
-  (reset! mouse  (state/get-new-mouse))
+  (reset! field  (state-helper/get-new-field))
+  (reset! inputs (state-helper/get-new-inputs))
+  (reset! mouse  (state-helper/get-new-mouse))
   (display/init "Game"))
 
 (defn -main

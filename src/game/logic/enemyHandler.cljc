@@ -1,7 +1,6 @@
 (ns game.logic.enemyHandler
   (:require [game.entity.entities :as e]
-            [game.logic.common :as common]
-            [game.logic.enemyHandler :as enemies]))
+            [game.logic.common :as common]))
 
 (def exclusion-radius 150)
 

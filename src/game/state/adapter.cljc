@@ -1,4 +1,4 @@
-(ns game.stateAdapter)
+(ns game.state.adapter)
 
 (defn generate-ratio
   [render-bounds bounds]
